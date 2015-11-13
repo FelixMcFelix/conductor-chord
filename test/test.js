@@ -79,4 +79,33 @@ describe("ID", () => {
 			expect(idRes.compareTo(result) === 0).to.be.true;
 		});
 	});
+
+	describe("Specific Forms", () => {
+		it("should allow creation of power-of-two buffers", () => {
+			var buf = ID.powerOfTwo(29);
+			var resultOracle = new Uint8Array([0x20,0x00,0x00,0x00]);
+
+			var match = true;
+			for(var i=0;i<resultOracle.length;i++){
+				match = buf[i] === resultOracle[i];
+				if(!match)
+					break;
+			}
+
+			expect(match).to.be.true;
+		});
+
+		it("should create power-of-two buffers as Uint8Array", () => {
+			var buf = ID.powerOfTwo(6);
+			expect(buf instanceof Uint8Array).to.be.true;
+		});
+
+		it("should ensure that power-of-two buffers are given enough array space", () => {
+			var buf1 = ID.powerOfTwo(44);
+			var buf2 = ID.powerOfTwo(16);
+			var buf3 = ID.powerOfTwo(390);
+			
+			expect(buf1.byteLength===Math.ceil(44/8) && buf2.byteLength===Math.ceil(16/8) && buf3.byteLength===Math.ceil(390/8)).to.be.true;
+		});
+	});
 });

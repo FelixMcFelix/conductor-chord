@@ -33,7 +33,9 @@ class ID {
 	}
 
 	get idString(){
-		return this.stringView.toBase64(true);
+		if(this.base64 === undefined)
+			this.base64 = this.stringView.toBase64(true);
+		return this.base64;
 	}
 }
 
