@@ -50,6 +50,22 @@ class ID {
 		return ID.add(this, arrayLike);
 	}
 
+	inOpenBound(aL1, aL2){
+		return ID.inOpenBound(this, aL1, aL2);
+	}
+
+	inLeftOpenBound(aL1, aL2){
+		return ID.inRightOpenBound(this, aL1, aL2);
+	}
+
+	inRightOpenBound(aL1, aL2){
+		return ID.inLeftOpenBound(this, aL1, aL2);
+	}
+
+	inClosedBound(aL1, aL2){
+		return ID.inClosedBound(this, aL1, aL2);
+	}
+
 	static leftShiftIn(id, bit){
 		let out = ID.uint8FromArrayLike(id).slice(0);
 
@@ -104,6 +120,22 @@ class ID {
 		};
 
 		return new ID(out);
+	}
+
+	static inOpenBound(al_value, aL_LB, aL_UB){
+
+	}
+
+	static inLeftOpenBound(al_value, aL_LB, aL_UB){
+		
+	}
+
+	static inRightOpenBound(al_value, aL_LB, aL_UB){
+		
+	}
+
+	static inClosedBound(al_value, aL_LB, aL_UB){
+		
 	}
 
 	static powerOfTwoBuffer(power){

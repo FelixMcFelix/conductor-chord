@@ -131,6 +131,63 @@ describe("ID", () => {
 		});
 	});
 
+	describe("Bounds checks", () => {
+		it("should return true for all checks if value is strictly between both bounds", () => {
+			var value = new ID(new Uint8Array([0x00,0xff,0x00])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0x00,0x00,0xff]);
+
+			expect(value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should return true for only right-open and closed if value is on the left bound", () => {
+			var value = new ID(new Uint8Array([0xff,0x00,0x00])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0x00,0x00,0xff]);
+
+			expect(!value.inOpenBound(lb, ub)
+				&& !value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should return true for only left-open and closed if value is on the right bound", () => {
+			var value = new ID(new Uint8Array([0x00,0x00,0xff])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0x00,0x00,0xff]);
+
+			expect(!value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& !value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should return false for all checks if value is outside of bounds", () => {
+			var value = new ID(new Uint8Array([0x00,0x00,0x00])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0x00,0x00,0xff]);
+
+			expect(!value.inOpenBound(lb, ub)
+				&& !value.inLeftOpenBound(lb, ub)
+				&& !value.inRightOpenBound(lb, ub)
+				&& !value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should return true if value is between bounds and bounds overflow ", () => {
+			var value = new ID(new Uint8Array([0x00,0x00,0x10])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0x00,0x00,0xff]);
+
+			expect(value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+	});
+
 	describe("Specific Forms", () => {
 		it("should allow creation of power-of-two IDs", () => {
 			var buf = ID.powerOfTwoBuffer(29);
