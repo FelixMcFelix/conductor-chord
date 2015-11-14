@@ -32,6 +32,57 @@ describe("ID", () => {
 		});
 	});
 
+	describe("Comparison", () => {
+		it("should return 0 for two equal IDs", () => {
+			var id1 = new ID(new Uint8Array([0x50,0x50,0x30]));
+			var id2 = new ID(new Uint8Array([0x50,0x50,0x30]));
+
+			expect(id1.compareTo(id2)===0).to.be.true;
+		});
+
+		it("should return a value less than 0 if left is less than right", () => {
+			var id1 = new ID(new Uint8Array([0x49,0x50,0x31]));
+			var id2 = new ID(new Uint8Array([0x50,0x50,0x30]));
+
+			expect(id1.compareTo(id2)<0).to.be.true;
+		});
+
+		it("should return a value greater than 0 if left is greater than right", () => {
+			var id1 = new ID(new Uint8Array([0x51,0x50,0x29]));
+			var id2 = new ID(new Uint8Array([0x50,0x50,0x30]));
+
+			expect(id1.compareTo(id2)>0).to.be.true;
+		});
+
+		it("should return correct value if left is wider (and smaller) than right", () => {
+			var id1 = new ID(new Uint8Array([0x00,0x49,0x31]));
+			var id2 = new ID(new Uint8Array(/*0x00*/[0x50,0x30]));
+
+			expect(id1.compareTo(id2)<0).to.be.true;
+		});
+
+		it("should return correct value if left is wider (and larger) than right", () => {
+			var id1 = new ID(new Uint8Array([0x01,0x49,0x29]));
+			var id2 = new ID(new Uint8Array(/*0x00*/[0x50,0x30]));
+
+			expect(id1.compareTo(id2)>0).to.be.true;
+		});
+
+		it("should return correct value if right is wider (and smaller) than left", () => {
+			var id1 = new ID(new Uint8Array(/*0x00*/[0x50,0x30]));
+			var id2 = new ID(new Uint8Array([0x00,0x49,0x31]));
+
+			expect(id1.compareTo(id2)>0).to.be.true;
+		});
+
+		it("should return correct value if right is wider (and larger) than left", () => {
+			var id1 = new ID(new Uint8Array(/*0x00*/[0x50,0x30]));
+			var id2 = new ID(new Uint8Array([0x01,0x51,0x29]));
+
+			expect(id1.compareTo(id2)<0).to.be.true;
+		});
+	});
+
 	describe("Arithmetic", () => {
 		it("should allow left shifting in the value 0", () => {
 			var orig = new Uint8Array([0xf0,0xc0,0xf0]);
@@ -39,7 +90,7 @@ describe("ID", () => {
 			var id1 = new ID(orig);
 			var idRes = new ID(resultOracle);
 			
-			var result = ID.leftShift(id1, 0);
+			var result = ID.leftShiftIn(id1, 0);
 
 			expect(idRes.compareTo(result) === 0).to.be.true;
 		});
@@ -50,7 +101,7 @@ describe("ID", () => {
 			var id1 = new ID(orig);
 			var idRes = new ID(resultOracle);
 			
-			var result = ID.leftShift(id1, 1);
+			var result = ID.leftShiftIn(id1, 1);
 
 			expect(idRes.compareTo(result) === 0).to.be.true;
 		});
@@ -69,7 +120,7 @@ describe("ID", () => {
 
 		it("should overflow properly with addition (simulate modular arithmetic)", () => {
 			var orig = new Uint8Array([0xff,0xff]);
-			var resultOracle = new Uint8Array([0x00,0x32]);
+			var resultOracle = new Uint8Array([0x00,0x31]);
 
 			var id1 = new ID(orig);
 			var idRes = new ID(resultOracle);

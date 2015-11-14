@@ -38,6 +38,74 @@ class ID {
 		return this.base64;
 	}
 
+	leftShiftIn(bit){
+		return ID.leftShiftIn(this, bit);
+	}
+
+	compareTo(id){
+		return ID.compare(this, id);
+	}
+
+	add(arrayLike){
+		return ID.add(this, arrayLike);
+	}
+
+	static leftShiftIn(id, bit){
+		let out = ID.uint8FromArrayLike(id).slice(0);
+
+		for (let i = out.length - 1; i >= 0; i--) {
+			let old = out[i];
+			out[i] = (old << 1) + bit;
+			bit = (old & 0x80) >> 7;
+		};
+
+		return new ID(out);
+	}
+
+	static compare(id1, id2){
+		let arr1 = ID.uint8FromArrayLike(id1),
+			arr2 = ID.uint8FromArrayLike(id2),
+			loopLen = (arr1.length > arr2.length) ? arr1.length : arr2.length,
+			retVal = 0;
+
+		for(let i = 0; i<loopLen && retVal===0; i++){
+			let pt1 = (arr1.length-loopLen+i < 0) ? 0x00 : arr1[arr1.length-loopLen+i],
+				pt2 = (arr2.length-loopLen+i < 0) ? 0x00 : arr2[arr2.length-loopLen+i];
+
+			retVal = pt1 - pt2;
+		};
+
+		return retVal;
+	}
+
+	static add(aL1, aL2){
+		let arr1 = ID.uint8FromArrayLike(aL1),
+			arr2 = ID.uint8FromArrayLike(aL2),
+			out,
+			addition;
+
+		if(arr1.length > arr2.length){
+			out = arr1.slice(0);
+			addition = arr2;
+		} else {
+			out = arr2.slice(0);
+			addition = arr1;
+		}
+
+		let carry = 0;
+		for (let i = out.length - 1; i >= 0; i--) {
+			let addIter = i + addition.length - out.length,
+				pt = (addIter < 0) ? 0x00 : addition[addIter],
+				old = out[i];
+
+			out[i] += pt + carry;
+			carry = old > out[i];
+
+		};
+
+		return new ID(out);
+	}
+
 	static powerOfTwoBuffer(power){
 		let bytes = power/8;
 		bytes = (bytes | 0) === bytes ? bytes : (bytes | 0) + 1;
@@ -46,6 +114,18 @@ class ID {
 		out[0] = 0x01 << power%8;
 
 		return out;
+	}
+
+	static uint8FromArrayLike(arrayLike){
+		if (arrayLike instanceof ArrayBuffer || arrayLike instanceof Array){
+			return new Uint8Array(arrayLike);
+		} else if (ArrayBuffer.isView(arrayLike)){
+			return new Uint8Array(arrayLike.buffer);
+		} else if (arrayLike instanceof ID){
+			return arrayLike.dataView;
+		} else {
+			throw new TypeError(arrayLike + "is not an array-like type: "+ typeof arrayLike);
+		}
 	}
 }
 
