@@ -81,8 +81,8 @@ describe("ID", () => {
 	});
 
 	describe("Specific Forms", () => {
-		it("should allow creation of power-of-two buffers", () => {
-			var buf = ID.powerOfTwo(29);
+		it("should allow creation of power-of-two IDs", () => {
+			var buf = ID.powerOfTwoBuffer(29);
 			var resultOracle = new Uint8Array([0x20,0x00,0x00,0x00]);
 
 			var match = true;
@@ -96,14 +96,14 @@ describe("ID", () => {
 		});
 
 		it("should create power-of-two buffers as Uint8Array", () => {
-			var buf = ID.powerOfTwo(6);
+			var buf = ID.powerOfTwoBuffer(6);
 			expect(buf instanceof Uint8Array).to.be.true;
 		});
 
 		it("should ensure that power-of-two buffers are given enough array space", () => {
-			var buf1 = ID.powerOfTwo(44);
-			var buf2 = ID.powerOfTwo(16);
-			var buf3 = ID.powerOfTwo(390);
+			var buf1 = ID.powerOfTwoBuffer(44);
+			var buf2 = ID.powerOfTwoBuffer(16);
+			var buf3 = ID.powerOfTwoBuffer(390);
 			
 			expect(buf1.byteLength===Math.ceil(44/8) && buf2.byteLength===Math.ceil(16/8) && buf3.byteLength===Math.ceil(390/8)).to.be.true;
 		});

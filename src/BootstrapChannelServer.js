@@ -7,11 +7,20 @@ class BootstrapChannelServer{
 	constructor(chord){
 		this._manager = null;
 		this.internalID = "Boot-Server";
-		/* TODO */
+		this.wss = null;
+		this.chord = chord;
 	}
 
 	onbind(){
-		/* TODO */
+		let t = this;
+		this.wss = new WebSocketServer({port: 4860});
+
+		return new Promise((resolve, reject) => {
+			this.wss.onmessage = msg => {t._manager.response(msg, t);};
+
+			this.wss.onopen = () => {resolve(false);};
+			this.wss.onerror = (e) => {reject(e);};
+		});
 	}
 
 	send(id,type,data){
@@ -24,6 +33,14 @@ class BootstrapChannelServer{
 
 	close(){
 		/* TODO */
+	}
+}
+
+function safeSend(ws, obj){
+	try{
+		ws.send(JSON.stringify(obj));
+	} catch (e) {
+		console.log(e);
 	}
 }
 

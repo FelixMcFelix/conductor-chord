@@ -37,6 +37,16 @@ class ID {
 			this.base64 = this.stringView.toBase64(true);
 		return this.base64;
 	}
+
+	static powerOfTwoBuffer(power){
+		let bytes = power/8;
+		bytes = (bytes | 0) === bytes ? bytes : (bytes | 0) + 1;
+
+		let out = new Uint8Array(bytes);
+		out[0] = 0x01 << power%8;
+
+		return out;
+	}
 }
 
 module.exports = ID;
