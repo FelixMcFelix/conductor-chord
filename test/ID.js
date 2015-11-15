@@ -131,7 +131,7 @@ describe("ID", () => {
 		});
 	});
 
-	describe("Bounds checks", () => {
+	describe("Bounds Checks", () => {
 		it("should return true for all checks if value is strictly between both bounds", () => {
 			var value = new ID(new Uint8Array([0x00,0xff,0x00])),
 				ub = new Uint8Array([0xff,0x00,0x00]),
@@ -178,8 +178,8 @@ describe("ID", () => {
 
 		it("should return true if value is between bounds and bounds overflow ", () => {
 			var value = new ID(new Uint8Array([0x00,0x00,0x10])),
-				ub = new Uint8Array([0xff,0x00,0x00]),
-				lb = new Uint8Array([0x00,0x00,0xff]);
+				ub = new Uint8Array([0x00,0x00,0xff]),
+				lb = new Uint8Array([0xff,0x00,0x00]);
 
 			expect(value.inOpenBound(lb, ub)
 				&& value.inLeftOpenBound(lb, ub)

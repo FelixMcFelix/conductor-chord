@@ -122,20 +122,36 @@ class ID {
 		return new ID(out);
 	}
 
-	static inOpenBound(al_value, aL_LB, aL_UB){
-
+	static inOpenBound(al_value, al_LB, al_UB){
+		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
+		return bVal[0] && !(bVal[1] || bVal[2]);
 	}
 
-	static inLeftOpenBound(al_value, aL_LB, aL_UB){
-		
+	static inLeftOpenBound(al_value, al_LB, al_UB){
+		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
+		return bVal[0] || bVal[2] && !bVal[1];
 	}
 
-	static inRightOpenBound(al_value, aL_LB, aL_UB){
-		
+	static inRightOpenBound(al_value, al_LB, al_UB){
+		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
+		return bVal[0] || bVal[1] && !bVal[2];
 	}
 
-	static inClosedBound(al_value, aL_LB, aL_UB){
-		
+	static inClosedBound(al_value, al_LB, al_UB){
+		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
+		return bVal[0] || bVal[1] || bVal[2];
+	}
+
+	static boundsChecks(al_value, al_LB, al_UB){
+		let cmpLB = ID.compare(al_value, al_LB),
+			cmpUB = ID.compare(al_value, al_UB),
+			order = ID.compare(al_LB, al_UB);
+
+		return [
+			(order <= 0)? (cmpLB>0 && cmpUB<0) : (cmpLB<0 || cmpUB>0), //Strictly in bounds.
+			cmpLB === 0, //On left bound.
+			cmpUB === 0 //On right bound.
+		];
 	}
 
 	static powerOfTwoBuffer(power){
