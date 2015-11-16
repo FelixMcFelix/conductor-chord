@@ -21,7 +21,7 @@ describe("Chord", () => {
 
 			var res = c.lookupItem(c.id.idString);
 
-			expect(res === id.pubKeyPem).to.be.true;
+			expect(res === c.pubKeyPem).to.be.true;
 		});
 	});	
 });
