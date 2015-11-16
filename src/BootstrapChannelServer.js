@@ -6,14 +6,17 @@ const msg_types = require("webrtc-conductor").enums,
 class BootstrapChannelServer{
 	constructor(chord){
 		this._manager = null;
-		this.internalID = "Boot-Server";
 		this.wss = null;
 		this.chord = chord;
 	}
 
+	get internalID(){
+		return "Boot-Client";
+	}
+
 	onbind(){
 		let t = this;
-		this.wss = new WebSocketServer({port: 4860});
+		this.wss = new WebSocketServer(this.chord.config.serverConfig);
 
 		return new Promise((resolve, reject) => {
 			this.wss.onmessage = msg => {t._manager.response(msg, t);};

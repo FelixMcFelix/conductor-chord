@@ -1,8 +1,6 @@
 "use strict";
 
-const Node = require("./Node.js");
-
-class RemoteNode extends Node{
+class Node{
 	constructor(){
 		//TODO
 	}

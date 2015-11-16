@@ -1,5 +1,4 @@
 var expect = require("chai").expect,
-	Chord = require("../src/Chord.js"),
 	ID = require("../src/ID.js");
 
 describe("ID", () => {

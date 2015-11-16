@@ -4,11 +4,15 @@ const msg_types = require("webrtc-conductor").enums,
 	  WebSocket = require("ws");
 
 class BootstrapChannelClient {
-	constructor(wsAddr){
+	constructor(wsAddr, chord){
 		this._manager = null;
-		this.internalID = "Boot-Client";
 		this.ws = null;
 		this.addr = wsAddr;
+		this.chord = chord;
+	}
+
+	get internalID(){
+		return "Boot-Client";
 	}
 
 	onbind(){
