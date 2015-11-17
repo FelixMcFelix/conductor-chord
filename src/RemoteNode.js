@@ -8,4 +8,4 @@ class RemoteNode extends Node{
 	}
 }
 
-module.exports = Node;
+module.exports = RemoteNode;
