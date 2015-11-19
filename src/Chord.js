@@ -7,8 +7,18 @@ const u = require("./UtilFunctions.js"),
 	  Node = require("./Node.js"),
 	  ID = require("./ID.js"),
 	  sha3 = require("js-sha3"),
-	  pki = require("node-forge").pki,
 	  Conductor = require("webrtc-conductor");
+
+let pki;
+if(typeof module !== 'undefined' && this.module !== module){
+	//We're node!
+	console.log("n")
+	pki = require("node-forge").pki
+} else {
+	//We're a browser.
+	console.log("b")
+	pki = require("../lib/forge.bundle.js").pki
+}
 
 class ConductorChord {
 	static get defaultConfig(){
