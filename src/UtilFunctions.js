@@ -13,6 +13,11 @@ let utils = {
 				out[propName] = config2[propName];
 
 		return out;
+	},
+
+	log(chord, msg){
+		if(chord.config.debug)
+			console.log(msg);
 	}
 }
 
