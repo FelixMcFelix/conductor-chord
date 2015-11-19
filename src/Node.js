@@ -1,7 +1,7 @@
 "use strict";
 
 class Node{
-	constructor(){
+	constructor(id){
 		//TODO
 	}
 }

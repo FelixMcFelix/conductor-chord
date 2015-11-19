@@ -46,7 +46,7 @@ class ConductorChord {
 		this.id = new ID(idBuf);
 
 		//Set up a Node object to represent the local state.
-		//TODO
+		this.node = new Node(this.id);
 
 		//Store the K,V pair <ID, pubKey> on the local view of the DHT.
 		//This will be relocated once an actual network is joined.
@@ -79,6 +79,10 @@ class ConductorChord {
 	}
 
 	message(id, msg){
+		//TODO
+	}
+
+	registerModule(module){
 		//TODO
 	}
 }
