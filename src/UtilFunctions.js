@@ -9,7 +9,7 @@ let utils = {
 				out[propName] = config1[propName];
 
 		for(var propName in config2)
-			if(config2.hasOwnProperty(propName) && (out[propName] === null || out[propName] === undefined))
+			if(config2.hasOwnProperty(propName))
 				out[propName] = config2[propName];
 
 		return out;
