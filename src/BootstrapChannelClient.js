@@ -4,11 +4,17 @@ const msg_types = require("webrtc-conductor").enums,
 	  WebSocket = require("ws");
 
 class BootstrapChannelClient {
+	// Single use bootstrap connection class.
+
 	constructor(wsAddr, chord){
 		this._manager = null;
 		this.ws = null;
 		this.addr = wsAddr;
 		this.chord = chord;
+
+		this.finalID = null;
+		this.initialID = chord.id.idString;
+		this.renamed = false;
 	}
 
 	get internalID(){
@@ -32,13 +38,17 @@ class BootstrapChannelClient {
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.
 				safeSend(this.ws, {
-					type: "bstrap",
+					type: "bstrap-offer",
 					id: id,
 					data: data
 				});
 				break;
 			case msg_types.MSG_ICE:
-				/* TODO */
+				safeSend(this.ws, {
+					type: "bstrap-ice",
+					id: id,
+					data: data
+				});
 				break;
 			default:
 				throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
@@ -46,15 +56,26 @@ class BootstrapChannelClient {
 	}
 
 	onmessage(msg){
-		var obj = JSON.parse(msg.data);
-		var out = {type: null, data: obj.data, id: obj.id};
+		let obj = JSON.parse(msg.data),
+			out = {
+			type: null,
+			data: obj.data,
+			id: null
+		};
 
 		switch(obj.type){
-			/* TODO */
+			case "bstrap-ice":
+				out.type = msg_types.RESPONSE_ICE;
+				break;
+			case "sdpReply":
+				out.type = resManEnum.RESPONSE_SDP_ANSWER;
+				break;
 			default:
-				out.type = resManEnum.RESPONSE_NONE;
+				out.type = msg_types.RESPONSE_NONE;
 				break;
 		}
+
+		out.id = this.renamed ? this.finalID : this.initialID;
 
 		return out;
 	}

@@ -7,18 +7,9 @@ const u = require("./UtilFunctions.js"),
 	  Node = require("./Node.js"),
 	  ID = require("./ID.js"),
 	  sha3 = require("js-sha3"),
+	  pki = require("node-forge").pki,
 	  Conductor = require("webrtc-conductor");
 
-let pki;
-if(typeof module !== 'undefined' && this.module !== module){
-	//We're node!
-	console.log("n")
-	pki = require("node-forge").pki
-} else {
-	//We're a browser.
-	console.log("b")
-	pki = require("../lib/forge.bundle.js").pki
-}
 
 class ConductorChord {
 	static get defaultConfig(){
@@ -88,23 +79,39 @@ class ConductorChord {
 	}
 
 	join(addr){
-		//TODO
+		u.log(this, "Joining "+addr);
+
+		let chan = new BootstrapChannelClient(addr, this)
+
+		this.conductor.connectTo(this.id.idstring, chan)
+			.then(
+				result => u.log(this, this.conductor.getConnection(chan.finalID)),
+				reason => u.log(this, reason)
+				);
 	}
 
 	addItem(key, value){
-		//TODO
+		let hash = sha3["sha3_"+this.config.idWidth].buffer(key);
+		this.addItemDirect(hash, value)
 	}
 
 	addItemDirect(hash, value){
-		//TODO
+		this.node.add(hash, value)
 	}
 
 	lookupItem(key){
-		//TODO
+		//should return a promise.
+
+		let hash = sha3["sha3_"+this.config.idWidth].buffer(key);
+		return this.lookupItemDirect(hash);
+	}
+
+	lookupItemDirect(id){
+		return this.node.lookup(id);
 	}
 
 	message(id, msg){
-		//TODO
+		this.node.message(id, msg);
 	}
 
 	registerModule(module){

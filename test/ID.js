@@ -185,6 +185,17 @@ describe("ID", () => {
 				&& value.inRightOpenBound(lb, ub)
 				&& value.inClosedBound(lb, ub)).to.be.true;
 		});
+
+		it("should map to all values if lb = ub", () => {
+			var value = new ID(new Uint8Array([0x12,0x34,0x56])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0xff,0x00,0x00]);
+
+			expect(value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		})
 	});
 
 	describe("Specific Forms", () => {

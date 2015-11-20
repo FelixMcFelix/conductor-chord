@@ -3,8 +3,12 @@
 const u = require("./UtilFunctions.js");
 
 class Node{
-	constructor(id){
+	constructor(chord, id){
 		//TODO
+	}
+
+	get successor(){
+		return this.fingerTable[0].node;
 	}
 }
 
