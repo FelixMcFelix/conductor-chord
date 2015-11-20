@@ -68,7 +68,9 @@ class BootstrapChannelClient {
 				out.type = msg_types.RESPONSE_ICE;
 				break;
 			case "sdpReply":
-				out.type = resManEnum.RESPONSE_SDP_ANSWER;
+				out.type = msg_types.RESPONSE_SDP_ANSWER;
+				this.renamed = true;
+				this._manager.renameConnection(this.initialID, this.finalID);
 				break;
 			default:
 				out.type = msg_types.RESPONSE_NONE;
