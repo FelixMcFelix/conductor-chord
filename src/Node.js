@@ -1,14 +1,21 @@
 "use strict";
 
-const u = require("./UtilFunctions.js");
+const u = require("./UtilFunctions.js"),
+	ID = require("./ID.js");
 
 class Node{
 	constructor(chord, id){
 		//TODO
+		this.id = id;
+		this.chord = chord;
 	}
 
 	get successor(){
 		return this.fingerTable[0].node;
+	}
+
+	get predecessor(){
+		//TODO
 	}
 	
 	initialiseFingerTable(knownNode){
@@ -29,6 +36,9 @@ class Node{
 	
 	message(id, msg){
 		//TODO
+		if(ID.inLeftOpenBound(id, this.predecessor, this.id)){
+			//TODO
+		}
 	}
 	
 	lookup(id){
