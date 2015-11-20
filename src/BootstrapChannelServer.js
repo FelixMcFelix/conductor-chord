@@ -9,6 +9,8 @@ class BootstrapChannelServer{
 		this._manager = null;
 		this.wss = null;
 		this.chord = chord;
+
+		this.bridgeStore = {};
 	}
 
 	get internalID(){
@@ -33,13 +35,44 @@ class BootstrapChannelServer{
 
 	send(id,type,data){
 		u.log(this.chord, "Send instruction given to server bootstrap:");
-		/* TODO */
+		//TODO - actually connect this to the standard messaging channels.
+		//Remains as a PoC for now...
+		//THIS SHOULD NEVER BE CALLED BY THE MANAGER, THIS SHOULD ONLY BE REACHED THROUGH REROUTE PACKETS.
 	}
 
 	onmessage(msg){
+		let obj = JSON.stringify(msg.data);
+
 		u.log(this.chord, "Server bootstrap received message:");
-		u.log(this.chord, msg);
-		/* TODO */
+		u.log(this.chord, obj);
+
+		
+
+		let out = {
+			type: null,
+			data: obj.data,
+			id: null
+		}
+
+		switch(obj.type){
+			case "bstrap-sdpOffer":
+				//NOTE: SHOULD PASS THIS TO REAL DESTINATION
+				//TODO
+				out.type = msg_types.RESPONSE_SDP_OFFER;
+				break;
+			case "bstrap-ice"
+				//NOTE: SHOULD PASS THIS TO REAL DESTINATION
+				//TODO
+				out.type = msg_types.RESPONSE_ICE;
+				break;
+			default:
+				out.type = msg_types.RESPONSE_NONE;
+				break;
+		}
+
+		out.id = obj.id;
+
+		return out;
 	}
 
 	close(){
