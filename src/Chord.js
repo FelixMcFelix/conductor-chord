@@ -56,7 +56,7 @@ class ConductorChord {
 
 		//Set up a Node object to represent the local state.
 		u.log(this, "Creating local node.");
-		this.node = new Node(this.id);
+		this.node = new Node(this, this.id);
 		u.log(this, "Created.");
 
 		//Store the K,V pair <ID, pubKey> on the local view of the DHT.

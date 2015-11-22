@@ -128,6 +128,57 @@ describe("ID", () => {
 
 			expect(idRes.compareTo(result) === 0).to.be.true;
 		});
+
+		it("should properly perform the one's complement of an array buffer", () => {
+			var orig = new Uint8Array([0x0f,0x70]);
+			var resultOracle = new Int8Array([0xf0,0x8f]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.onesComplement(id1);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
+
+		it("should properly perform the two's complement of an array buffer", () => {
+			var orig = new Uint8Array([0x0f,0x70]);
+			var resultOracle = new Int8Array([0xf0,0x90]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.twosComplement(id1);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
+
+		it("should allow subtraction over the domain", () => {
+			var orig = new Uint8Array([0x01,0x00]);
+			var resultOracle = new Uint8Array([0x00,0xff]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.subtract(id1, [0x01]);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
+
+		it("should overflow properly with subtraction (simulate modular arithmetic)", () => {
+			var orig = new Uint8Array([0x00,0x00]);
+			var resultOracle = new Uint8Array([0xfa,0x00]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.subtract(id1, [0x06,0x00]);
+
+			// console.log(ID.twosComplement([0x06,0x00]))
+			// console.log(result)
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
 	});
 
 	describe("Bounds Checks", () => {

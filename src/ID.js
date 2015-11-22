@@ -50,6 +50,10 @@ class ID {
 		return ID.add(this, arrayLike);
 	}
 
+	subtract(arrayLike){
+		return ID.subtract(this, arrayLike);
+	}
+
 	inOpenBound(aL1, aL2){
 		return ID.inOpenBound(this, aL1, aL2);
 	}
@@ -108,6 +112,11 @@ class ID {
 			addition = arr1;
 		}
 
+		console.log(arr1);
+		console.log(arr2);
+		console.log(out);
+		console.log(addition);
+
 		let carry = 0;
 		for (let i = out.length - 1; i >= 0; i--) {
 			let addIter = i + addition.length - out.length,
@@ -119,7 +128,30 @@ class ID {
 
 		};
 
+		// console.log(out)
+		// console.log(addition)
+
 		return new ID(out);
+	}
+
+	static subtract(aL1, aL2){
+		let arr1 = ID.uint8FromArrayLike(aL1),
+			arr2 = ID.uint8FromArrayLike(aL2),
+			out,
+			subtraction;
+
+		if(arr1.length > arr2.length){
+			out = arr1.slice(0);
+			subtraction = new Uint8Array(arr1.length);
+			subtraction.set(arr2, arr1.length-arr2.length);
+		} else {
+			out = arr2.slice(0);
+			subtraction = new Uint8Array(arr2.length);
+			subtraction.set(arr1, arr2.length-arr1.length);
+		}
+
+		out = ID.add(out, ID.twosComplement(subtraction));
+		return out;
 	}
 
 	static inOpenBound(al_value, al_LB, al_UB){
@@ -162,6 +194,20 @@ class ID {
 		out[0] = 0x01 << power%8;
 
 		return out;
+	}
+
+	static onesComplement(arrayLike){
+		let arr = ID.uint8FromArrayLike(arrayLike).slice(0);
+
+		for (var i = arr.length - 1; i >= 0; i--) {
+			arr[i] = ~arr[i]
+		};
+
+		return arr;
+	}
+
+	static twosComplement(arrayLike){
+		return ID.add([0x01], ID.onesComplement(arrayLike));
 	}
 
 	static uint8FromArrayLike(arrayLike){

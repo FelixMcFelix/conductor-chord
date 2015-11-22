@@ -60,7 +60,7 @@ class BootstrapChannelServer{
 				//TODO
 				out.type = msg_types.RESPONSE_SDP_OFFER;
 				break;
-			case "bstrap-ice"
+			case "bstrap-ice":
 				//NOTE: SHOULD PASS THIS TO REAL DESTINATION
 				//TODO
 				out.type = msg_types.RESPONSE_ICE;
