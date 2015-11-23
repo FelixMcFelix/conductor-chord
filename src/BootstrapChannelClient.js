@@ -15,6 +15,8 @@ class BootstrapChannelClient {
 		this.finalID = null;
 		this.initialID = chord.id.idString;
 		this.renamed = false;
+
+		this.serverPem = null;
 	}
 
 	get internalID(){
@@ -26,9 +28,31 @@ class BootstrapChannelClient {
 		this.ws = new WebSocket(this.addr);
 
 		return new Promise((resolve, reject) => {
-			this.ws.onmessage = msg => {t._manager.response(msg, t);};
+			this.ws.onopen = () => {
+				//Take over the message handler until registration is done.
+				this.ws.onmessage = msg => {
+					let obj = JSON.parse(msg);
+					switch(obj.type){
+						case "bstrap-wel":
+							this.finalID = obj.id;
+							this.serverPem = obj.data;
+							this.renamed = true;
+							this._manager.renameConnection(this.initialID, this.finalID);
+							this.ws.onmessage = msg => {t._manager.response(msg, t);};
+							resolve(true);
+							break;
+						default:
+							throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
+					}
+				};
 
-			this.ws.onopen = () => {resolve(true);};
+				safeSend(this.ws, {
+					type: "bstrap-reg",
+					id: this.initialID,
+					data: this.chord.pubKeyPem
+				});
+			};
+
 			this.ws.onerror = (e) => {reject(e);};
 		});
 	}
@@ -69,8 +93,6 @@ class BootstrapChannelClient {
 				break;
 			case "bstrap-sdpReply":
 				out.type = msg_types.RESPONSE_SDP_ANSWER;
-				this.renamed = true;
-				this._manager.renameConnection(this.initialID, this.finalID);
 				break;
 			default:
 				out.type = msg_types.RESPONSE_NONE;

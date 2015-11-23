@@ -4,17 +4,22 @@ const msg_types = require("webrtc-conductor").enums,
 	  WebSocketServer = require("ws").Server,
 	  u = require("./UtilFunctions.js");
 
+// This initial version uses the chord spec - i.e. we use a wrtc connection with the node
+// of the server itself, rather than a level above being used to route information across.
+// This way is simpler, but may be more taxing on the server.
+
 class BootstrapChannelServer{
 	constructor(chord){
 		this._manager = null;
 		this.wss = null;
 		this.chord = chord;
+		this.id = chord.id;
 
-		this.bridgeStore = {};
+		this.connMap = {};
 	}
 
 	get internalID(){
-		return "Boot-Client";
+		return "Boot-Server";
 	}
 
 	onbind(){
@@ -23,25 +28,78 @@ class BootstrapChannelServer{
 		u.log(t.chord, "Bound, opening WSS.");
 
 		return new Promise((resolve, reject) => {
-			this.wss.onmessage = msg => {t._manager.response(msg, t);};
-
 			this.wss.onopen = () => {
 				u.log(t.chord, "Server finally ready!");
 				resolve(false);
 			};
-			this.wss.onerror = (e) => {reject(e);};
+
+			this.wss.onerror = e => {reject(e);};
+
+			this.wss.onconnection = conn => {
+				u.log(t.chord, "Connection from client, setting up.");
+				conn.onmessage = function(msg) {
+					u.log(t.chord, "Initial message from client, checking...");
+					let obj = JSON.parse(msg);
+					switch(obj.type){
+						case "bstrap-reg":
+							t.connMap[obj.id] = this;
+							this.id = obj.id;
+							this.registered = true;
+							this.pubKey = obj.data;
+							this.onmessage = msg => {t._manager.response(msg, t);};
+
+							u.log(t.chord, "Valid. Connection from "+this.id+". Message handler bound.");
+
+							safeSend(this, {
+								type: "bstrap-wel",
+								id: t.id.idString,
+								data: t.chord.pubKeyPem
+							});
+							break;
+						default:
+							throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
+					}
+					t._manager.response(msg, t);
+				};
+				conn.onclose = () => {
+					if(conn.registered)
+						delete this.connMap[conn.id]
+				};
+			};
 		});
 	}
 
 	send(id,type,data){
-		u.log(this.chord, "Send instruction given to server bootstrap:");
-		//TODO - actually connect this to the standard messaging channels.
-		//Remains as a PoC for now...
-		//THIS SHOULD NEVER BE CALLED BY THE MANAGER, THIS SHOULD ONLY BE REACHED THROUGH REROUTE PACKETS.
+		u.log(this.chord, "Send instruction given to server bootstrap: "+type);
+
+		let obj = {
+			type: null,
+			data,
+			id
+		};
+
+		let target = this.connMap[id];
+
+		switch(type){
+			case msg_types.MSG_SDP_OFFER:
+				obj.type = "bstrap-offer";
+				safeSend(target, obj);
+				break;
+			case msg_types.MSG_SDP_ANSWER:
+				obj.type = "bstrap-reply";
+				safeSend(target, obj);
+				break;
+			case msg_types.MSG_ICE:
+				obj.type = "bstrap-ice";
+				safeSend(target, obj);
+				break;
+			default:
+				throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
+		}
 	}
 
 	onmessage(msg){
-		let obj = JSON.stringify(msg.data);
+		let obj = JSON.parse(msg.data);
 
 		u.log(this.chord, "Server bootstrap received message:");
 		u.log(this.chord, obj);
@@ -56,13 +114,9 @@ class BootstrapChannelServer{
 
 		switch(obj.type){
 			case "bstrap-sdpOffer":
-				//NOTE: SHOULD PASS THIS TO REAL DESTINATION
-				//TODO
 				out.type = msg_types.RESPONSE_SDP_OFFER;
 				break;
 			case "bstrap-ice":
-				//NOTE: SHOULD PASS THIS TO REAL DESTINATION
-				//TODO
 				out.type = msg_types.RESPONSE_ICE;
 				break;
 			default:
@@ -77,7 +131,7 @@ class BootstrapChannelServer{
 
 	close(){
 		u.log(this.chord, "Closing server bootstrap - this shouldn't happen.");
-		/* TODO */
+		this.wss.close();
 	}
 }
 
