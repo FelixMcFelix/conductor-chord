@@ -174,9 +174,6 @@ describe("ID", () => {
 			
 			var result = ID.subtract(id1, [0x06,0x00]);
 
-			// console.log(ID.twosComplement([0x06,0x00]))
-			// console.log(result)
-
 			expect(idRes.compareTo(result) === 0).to.be.true;
 		});
 	});

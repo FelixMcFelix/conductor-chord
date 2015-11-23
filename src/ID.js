@@ -112,11 +112,6 @@ class ID {
 			addition = arr1;
 		}
 
-		console.log(arr1);
-		console.log(arr2);
-		console.log(out);
-		console.log(addition);
-
 		let carry = 0;
 		for (let i = out.length - 1; i >= 0; i--) {
 			let addIter = i + addition.length - out.length,
@@ -127,9 +122,6 @@ class ID {
 			carry = old > out[i];
 
 		};
-
-		// console.log(out)
-		// console.log(addition)
 
 		return new ID(out);
 	}
@@ -145,13 +137,12 @@ class ID {
 			subtraction = new Uint8Array(arr1.length);
 			subtraction.set(arr2, arr1.length-arr2.length);
 		} else {
-			out = arr2.slice(0);
-			subtraction = new Uint8Array(arr2.length);
-			subtraction.set(arr1, arr2.length-arr1.length);
+			out = new Uint8Array(arr2.length);
+			out.set(arr1, arr2.length-arr1.length);
+			subtraction = arr2;
 		}
 
-		out = ID.add(out, ID.twosComplement(subtraction));
-		return out;
+		return ID.add(out, ID.twosComplement(subtraction));
 	}
 
 	static inOpenBound(al_value, al_LB, al_UB){
