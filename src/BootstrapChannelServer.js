@@ -39,7 +39,8 @@ class BootstrapChannelServer{
 				u.log(t.chord, "Connection from client, setting up.");
 				conn.onmessage = function(msg) {
 					u.log(t.chord, "Initial message from client, checking...");
-					let obj = JSON.parse(msg);
+					u.log(t.chord, msg)
+					let obj = JSON.parse(msg.data);
 					switch(obj.type){
 						case "bstrap-reg":
 							t.connMap[obj.id] = this;
