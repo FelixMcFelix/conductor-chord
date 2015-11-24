@@ -37,7 +37,6 @@ class BootstrapChannelServer{
 
 			this.wss.on("connection", conn => {
 				u.log(t.chord, "Connection from client, setting up.");
-				u.log(conn);
 				conn.onmessage = function(msg) {
 					u.log(t.chord, "Initial message from client, checking...");
 					let obj = JSON.parse(msg);
