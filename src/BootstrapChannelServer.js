@@ -37,17 +37,18 @@ class BootstrapChannelServer{
 
 			this.wss.on("connection", conn => {
 				u.log(t.chord, "Connection from client, setting up.");
-				conn.onmessage = function(msg) {
+
+				conn.onmessage = function(evt) {
 					u.log(t.chord, "Initial message from client, checking...");
-					u.log(t.chord, msg)
-					let obj = JSON.parse(msg.data);
+					u.log(t.chord, evt)
+					let obj = JSON.parse(evt.data);
 					switch(obj.type){
 						case "bstrap-reg":
 							t.connMap[obj.id] = this;
 							this.id = obj.id;
 							this.registered = true;
 							this.pubKey = obj.data;
-							this.onmessage = msg => {t._manager.response(msg, t);};
+							this.onmessage = evt => {t._manager.response(evt, t);};
 
 							u.log(t.chord, "Valid. Connection from "+this.id+". Message handler bound.");
 
@@ -60,8 +61,8 @@ class BootstrapChannelServer{
 						default:
 							throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
 					}
-					t._manager.response(msg, t);
 				};
+
 				conn.onclose = () => {
 					if(conn.registered)
 						delete this.connMap[conn.id]
@@ -99,8 +100,8 @@ class BootstrapChannelServer{
 		}
 	}
 
-	onmessage(msg){
-		let obj = JSON.parse(msg.data);
+	onmessage(evt){
+		let obj = JSON.parse(evt.data);
 
 		u.log(this.chord, "Server bootstrap received message:");
 		u.log(this.chord, obj);

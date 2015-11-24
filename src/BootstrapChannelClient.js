@@ -33,9 +33,8 @@ class BootstrapChannelClient {
 			this.ws.onopen = () => {
 				u.log(t.chord, "WebSocket opened.");
 				//Take over the message handler until registration is done.
-				this.ws.onmessage = msg => {
-					let obj = JSON.parse(msg);
-					console.log(msg);
+				this.ws.onmessage = evt => {
+					let obj = JSON.parse(evt.data);
 					switch(obj.type){
 						case "bstrap-wel":
 							u.log(t.chord, "Server has replied, perform the exchange of IDs.");
@@ -43,7 +42,7 @@ class BootstrapChannelClient {
 							this.serverPem = obj.data;
 							this.renamed = true;
 							this._manager.renameConnection(this.initialID, this.finalID);
-							this.ws.onmessage = msg => {t._manager.response(msg, t);};
+							this.ws.onmessage = evt => {t._manager.response(evt, t);};
 							resolve(true);
 							break;
 						default:
@@ -87,8 +86,8 @@ class BootstrapChannelClient {
 		}
 	}
 
-	onmessage(msg){
-		let obj = JSON.parse(msg.data),
+	onmessage(evt){
+		let obj = JSON.parse(evt.data),
 			out = {
 			type: null,
 			data: obj.data,
