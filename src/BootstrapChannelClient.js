@@ -61,14 +61,14 @@ class BootstrapChannelClient {
 	}
 
 	send(id,type,data){
-		u.log(t.chord, "BSTRAP: SENDING "+type);
+		u.log(this.chord, "BSTRAP: SENDING "+type);
 
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.
 				this.renamed = true;
 				this._manager.renameConnection(this.initialID, this.finalID);
-				
+
 				safeSend(this.ws, {
 					type: "bstrap-offer",
 					id: id,
