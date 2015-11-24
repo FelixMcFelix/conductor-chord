@@ -40,8 +40,6 @@ class BootstrapChannelClient {
 							u.log(t.chord, "Server has replied, perform the exchange of IDs.");
 							this.finalID = obj.id;
 							this.serverPem = obj.data;
-							this.renamed = true;
-							this._manager.renameConnection(this.initialID, this.finalID);
 							this.ws.onmessage = evt => {t._manager.response(evt, t);};
 							resolve(true);
 							break;
@@ -68,6 +66,9 @@ class BootstrapChannelClient {
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.
+				this.renamed = true;
+				this._manager.renameConnection(this.initialID, this.finalID);
+				
 				safeSend(this.ws, {
 					type: "bstrap-offer",
 					id: id,
