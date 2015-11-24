@@ -72,7 +72,7 @@ class BootstrapChannelServer{
 	}
 
 	send(id,type,data){
-		u.log(this.chord, "Send instruction given to server bootstrap: "+type);
+		u.log(this.chord, "Send instruction given to server bootstrap");
 
 		let obj = {
 			type: null,

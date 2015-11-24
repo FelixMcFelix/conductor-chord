@@ -61,7 +61,7 @@ class BootstrapChannelClient {
 	}
 
 	send(id,type,data){
-		u.log(this.chord, "BSTRAP: SENDING "+type);
+		u.log(this.chord, "BSTRAP: SENDING ");
 
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
