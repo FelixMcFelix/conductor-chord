@@ -35,6 +35,7 @@ class BootstrapChannelClient {
 				//Take over the message handler until registration is done.
 				this.ws.onmessage = msg => {
 					let obj = JSON.parse(msg);
+					console.log(msg);
 					switch(obj.type){
 						case "bstrap-wel":
 							u.log(t.chord, "Server has replied, perform the exchange of IDs.");
