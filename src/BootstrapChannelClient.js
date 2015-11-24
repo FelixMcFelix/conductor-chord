@@ -26,14 +26,17 @@ class BootstrapChannelClient {
 	onbind(){
 		let t = this;
 		this.ws = new WebSocket(this.addr);
+		u.log(t.chord, "Opening WebSocket connection.");
 
 		return new Promise((resolve, reject) => {
 			this.ws.onopen = () => {
+				u.log(t.chord, "WebSocket opened.");
 				//Take over the message handler until registration is done.
 				this.ws.onmessage = msg => {
 					let obj = JSON.parse(msg);
 					switch(obj.type){
 						case "bstrap-wel":
+							u.log(t.chord, "Server has replied, perform the exchange of IDs.");
 							this.finalID = obj.id;
 							this.serverPem = obj.data;
 							this.renamed = true;
@@ -46,6 +49,7 @@ class BootstrapChannelClient {
 					}
 				};
 
+				u.log(t.chord, "Asking server for its ID on the network.");
 				safeSend(this.ws, {
 					type: "bstrap-reg",
 					id: this.initialID,
@@ -58,6 +62,8 @@ class BootstrapChannelClient {
 	}
 
 	send(id,type,data){
+		u.log(t.chord, "BSTRAP: SENDING "+type);
+
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.

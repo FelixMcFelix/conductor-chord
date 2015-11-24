@@ -28,15 +28,16 @@ class BootstrapChannelServer{
 		u.log(t.chord, "Bound, opening WSS.");
 
 		return new Promise((resolve, reject) => {
-			this.wss.onopen = () => {
+			this.wss.on("open", () => {
 				u.log(t.chord, "Server finally ready!");
 				resolve(false);
-			};
+			});
 
-			this.wss.onerror = e => {reject(e);};
+			this.wss.on("error", e => {reject(e);});
 
-			this.wss.onconnection = conn => {
+			this.wss.on("connection", conn => {
 				u.log(t.chord, "Connection from client, setting up.");
+				u.log(conn);
 				conn.onmessage = function(msg) {
 					u.log(t.chord, "Initial message from client, checking...");
 					let obj = JSON.parse(msg);
@@ -65,7 +66,7 @@ class BootstrapChannelServer{
 					if(conn.registered)
 						delete this.connMap[conn.id]
 				};
-			};
+			});
 		});
 	}
 
