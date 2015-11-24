@@ -71,15 +71,15 @@ class BootstrapChannelClient {
 
 				safeSend(this.ws, {
 					type: "bstrap-offer",
-					id: id,
-					data: data
+					id: this.initialID,
+					data
 				});
 				break;
 			case msg_types.MSG_ICE:
 				safeSend(this.ws, {
 					type: "bstrap-ice",
-					id: id,
-					data: data
+					id: initialID,
+					data
 				});
 				break;
 			default:
@@ -107,7 +107,8 @@ class BootstrapChannelClient {
 				break;
 		}
 
-		out.id = this.renamed ? this.finalID : this.initialID;
+		// out.id = this.renamed ? this.finalID : this.initialID;
+		out.id = this.finalID;
 
 		return out;
 	}

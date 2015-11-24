@@ -77,7 +77,7 @@ class BootstrapChannelServer{
 		let obj = {
 			type: null,
 			data,
-			id
+			id: this.id.idString
 		};
 
 		let target = this.connMap[id];
