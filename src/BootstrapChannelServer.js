@@ -85,19 +85,18 @@ class BootstrapChannelServer{
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
 				obj.type = "bstrap-offer";
-				safeSend(target, obj);
 				break;
 			case msg_types.MSG_SDP_ANSWER:
 				obj.type = "bstrap-reply";
-				safeSend(target, obj);
 				break;
 			case msg_types.MSG_ICE:
 				obj.type = "bstrap-ice";
-				safeSend(target, obj);
 				break;
 			default:
 				throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
 		}
+
+		safeSend(target, obj);
 	}
 
 	onmessage(evt){

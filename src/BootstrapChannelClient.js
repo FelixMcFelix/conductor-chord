@@ -61,30 +61,28 @@ class BootstrapChannelClient {
 	}
 
 	send(id,type,data){
-		u.log(this.chord, "BSTRAP: SENDING ");
+		u.log(this.chord, "BSTRAP: SENDING");
+
+		let obj = {
+			id: this.initialID,
+			data
+		};
 
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.
 				this.renamed = true;
 				this._manager.renameConnection(this.initialID, this.finalID);
-
-				safeSend(this.ws, {
-					type: "bstrap-offer",
-					id: this.initialID,
-					data
-				});
+				obj.type = "bstrap-offer";
 				break;
 			case msg_types.MSG_ICE:
-				safeSend(this.ws, {
-					type: "bstrap-ice",
-					id: initialID,
-					data
-				});
+				obj.type = "bstrap-ice";
 				break;
 			default:
 				throw new Error("Illegal class "+type+" of message sent to "+this.internalID+" channel!");
 		}
+
+		safeSend(this.ws, obj);
 	}
 
 	onmessage(evt){
