@@ -75,7 +75,6 @@ class BootstrapChannelServer{
 		u.log(this.chord, "Send instruction given to server bootstrap");
 
 		let obj = {
-			type: null,
 			data,
 			id: this.id.idString
 		};

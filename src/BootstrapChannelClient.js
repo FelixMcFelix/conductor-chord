@@ -72,6 +72,7 @@ class BootstrapChannelClient {
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.
 				this.renamed = true;
+				console.log(this._manager);
 				this._manager.renameConnection(this.initialID, this.finalID);
 				obj.type = "bstrap-offer";
 				break;
