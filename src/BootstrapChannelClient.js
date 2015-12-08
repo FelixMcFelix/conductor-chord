@@ -34,7 +34,9 @@ class BootstrapChannelClient {
 				u.log(t.chord, "WebSocket opened.");
 				//Take over the message handler until registration is done.
 				this.ws.onmessage = evt => {
+					u.log(t.chord, "Received welcome message from server.")
 					let obj = JSON.parse(evt.data);
+					u.log(t.chord, obj);
 					switch(obj.type){
 						case "bstrap-wel":
 							u.log(t.chord, "Server has replied, perform the exchange of IDs.");
@@ -72,9 +74,6 @@ class BootstrapChannelClient {
 			case msg_types.MSG_SDP_OFFER:
 				//In this case, id refers to the CLIENT'S ID.
 				this.renamed = true;
-				console.log(this._manager);
-				console.log(this.initialID);
-				console.log(this.finalID);
 				this._manager.renameConnection(this.initialID, this.finalID);
 				obj.type = "bstrap-offer";
 				break;
@@ -89,6 +88,8 @@ class BootstrapChannelClient {
 	}
 
 	onmessage(evt){
+		u.log(t.chord, "Client bootstrap received message:")
+
 		let obj = JSON.parse(evt.data),
 			out = {
 			type: null,
@@ -96,11 +97,13 @@ class BootstrapChannelClient {
 			id: null
 		};
 
+		u.log(t.chord, obj)
+
 		switch(obj.type){
 			case "bstrap-ice":
 				out.type = msg_types.RESPONSE_ICE;
 				break;
-			case "bstrap-sdpReply":
+			case "bstrap-reply":
 				out.type = msg_types.RESPONSE_SDP_ANSWER;
 				break;
 			default:

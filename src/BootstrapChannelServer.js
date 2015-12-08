@@ -40,8 +40,8 @@ class BootstrapChannelServer{
 
 				conn.onmessage = function(evt) {
 					u.log(t.chord, "Initial message from client, checking...");
-					u.log(t.chord, evt)
 					let obj = JSON.parse(evt.data);
+					u.log(t.chord, obj)
 					switch(obj.type){
 						case "bstrap-reg":
 							t.connMap[obj.id] = this;
@@ -72,7 +72,7 @@ class BootstrapChannelServer{
 	}
 
 	send(id,type,data){
-		u.log(this.chord, "Send instruction given to server bootstrap");
+		u.log(this.chord, "Send instruction given to server bootstrap.");
 
 		let obj = {
 			data,
@@ -83,12 +83,15 @@ class BootstrapChannelServer{
 
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
+				u.log(t.chord, "Sending offer to client (?)")
 				obj.type = "bstrap-offer";
 				break;
 			case msg_types.MSG_SDP_ANSWER:
+				u.log(t.chord, "Sending SDP reply to client.")
 				obj.type = "bstrap-reply";
 				break;
 			case msg_types.MSG_ICE:
+				u.log(t.chord, "Sending ICE candidate to client.")
 				obj.type = "bstrap-ice";
 				break;
 			default:
@@ -103,8 +106,6 @@ class BootstrapChannelServer{
 
 		u.log(this.chord, "Server bootstrap received message:");
 		u.log(this.chord, obj);
-
-		
 
 		let out = {
 			type: null,
