@@ -83,15 +83,15 @@ class BootstrapChannelServer{
 
 		switch(type){
 			case msg_types.MSG_SDP_OFFER:
-				u.log(t.chord, "Sending offer to client (?)")
+				u.log(this.chord, "Sending offer to client (?)")
 				obj.type = "bstrap-offer";
 				break;
 			case msg_types.MSG_SDP_ANSWER:
-				u.log(t.chord, "Sending SDP reply to client.")
+				u.log(this.chord, "Sending SDP reply to client.")
 				obj.type = "bstrap-reply";
 				break;
 			case msg_types.MSG_ICE:
-				u.log(t.chord, "Sending ICE candidate to client.")
+				u.log(this.chord, "Sending ICE candidate to client.")
 				obj.type = "bstrap-ice";
 				break;
 			default:
