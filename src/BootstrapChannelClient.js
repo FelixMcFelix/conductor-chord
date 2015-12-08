@@ -73,6 +73,8 @@ class BootstrapChannelClient {
 				//In this case, id refers to the CLIENT'S ID.
 				this.renamed = true;
 				console.log(this._manager);
+				console.log(this.initialID);
+				console.log(this.finalID);
 				this._manager.renameConnection(this.initialID, this.finalID);
 				obj.type = "bstrap-offer";
 				break;
