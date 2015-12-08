@@ -113,7 +113,7 @@ class BootstrapChannelServer{
 		}
 
 		switch(obj.type){
-			case "bstrap-sdpOffer":
+			case "bstrap-offer":
 				out.type = msg_types.RESPONSE_SDP_OFFER;
 				break;
 			case "bstrap-ice":
