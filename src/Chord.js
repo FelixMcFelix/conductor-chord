@@ -83,7 +83,7 @@ class ConductorChord {
 
 		let chan = new BootstrapChannelClient(addr, this)
 
-		this.conductor.connectTo(this.id.idstring, chan)
+		this.conductor.connectTo(this.id.idString, chan)
 			.then(
 				result => u.log(this, this.conductor.getConnection(chan.finalID)),
 				reason => u.log(this, reason)
