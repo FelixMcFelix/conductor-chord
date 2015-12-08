@@ -88,7 +88,7 @@ class BootstrapChannelClient {
 	}
 
 	onmessage(evt){
-		u.log(t.chord, "Client bootstrap received message:")
+		u.log(this.chord, "Client bootstrap received message:")
 
 		let obj = JSON.parse(evt.data),
 			out = {
@@ -97,7 +97,7 @@ class BootstrapChannelClient {
 			id: null
 		};
 
-		u.log(t.chord, obj)
+		u.log(this.chord, obj)
 
 		switch(obj.type){
 			case "bstrap-ice":
