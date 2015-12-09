@@ -1,8 +1,8 @@
 "use strict";
 
 const msg_types = require("webrtc-conductor").enums,
-	  WebSocketServer = require("ws").Server,
-	  u = require("./UtilFunctions.js");
+	WebSocketServer = require("ws").Server,
+	u = require("./UtilFunctions.js");
 
 // This initial version uses the chord spec - i.e. we use a wrtc connection with the node
 // of the server itself, rather than a level above being used to route information across.

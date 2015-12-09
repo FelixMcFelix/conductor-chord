@@ -125,8 +125,8 @@ class Node{
 	message(id, msg){
 		//TODO
 		if(ID.inLeftOpenBound(id, this.predecessor, this.id)){
-			//TODO
 			//Pass to appropriate handler - this is our message.
+			this.chord.registry.parse(msg);
 		} else {
 			//Pass along the chain to a responsible node.
 			this.closestPreceedingFinger(id).message(id, message);

@@ -5,15 +5,17 @@
 
 class ModuleRegistry {
 	constructor(){
-
+		this.registry = {};
 	}
 
 	register(module){
-
+		this.registry[module.id] = module;
 	}
 
 	parse(message){
+		let obj = ModuleRegistry.unwrap(message);
 
+		this.registry[obj.m].delegate(obj.h, obj.o);		
 	}
 
 	static wrap(module, handler, msg){

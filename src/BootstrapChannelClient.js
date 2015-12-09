@@ -1,8 +1,8 @@
 "use strict";
 
 const msg_types = require("webrtc-conductor").enums,
-	  WebSocket = require("ws"),
-	  u = require("./UtilFunctions.js");
+	WebSocket = require("ws"),
+	u = require("./UtilFunctions.js");
 
 class BootstrapChannelClient {
 	// Single use bootstrap connection class.

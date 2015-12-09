@@ -1,14 +1,16 @@
 "use strict";
 
 const u = require("./UtilFunctions.js"),
-	  ChordSignalChannel = require("./ChordSignalChannel.js"),
-	  BootstrapChannelClient = require("./BootstrapChannelClient.js"),
-	  BootstrapChannelServer = require("./BootstrapChannelServer.js"),
-	  Node = require("./Node.js"),
-	  ID = require("./ID.js"),
-	  sha3 = require("js-sha3"),
-	  pki = require("node-forge").pki,
-	  Conductor = require("webrtc-conductor");
+	ChordSignalChannel = require("./ChordSignalChannel.js"),
+	BootstrapChannelClient = require("./BootstrapChannelClient.js"),
+	BootstrapChannelServer = require("./BootstrapChannelServer.js"),
+	ModuleRegistry = require("./ModuleRegistry.js"),
+	RemoteCallModule = require("./RemoteCallModule.js"),
+	Node = require("./Node.js"),
+	ID = require("./ID.js"),
+	sha3 = require("js-sha3"),
+	pki = require("node-forge").pki,
+	Conductor = require("webrtc-conductor");
 
 
 class ConductorChord {
@@ -71,6 +73,16 @@ class ConductorChord {
 		this.conductor = Conductor.create(this.config.conductorConfig);
 		u.log(this, "Channel and conductor created? "+this.conductor!=null);
 
+		//Set onconnection event.
+		this.conductor.onconnection = conn => {
+			result.on("message", (a)=>{console.log(a); conn.send(a)});
+		};
+
+		//Create a module registry, register the RPC default module.
+		this.registry = new ModuleRegistry();
+		this.rcm = new RemoteCallModule(this);
+		this.registerModule(this.rcm);
+
 		//If this node is actually a server, load a background channel which will mediate requests to join the network.
 		if(this.config.isServer){
 			u.log(this, "Initialising server backing channel.");
@@ -85,7 +97,10 @@ class ConductorChord {
 
 		this.conductor.connectTo(this.id.idString, chan)
 			.then(
-				result => u.log(this, this.conductor.getConnection(chan.finalID)),
+				result =>{
+					u.log(this, result);
+					result.on("message", (a)=>{console.log(a)});
+				},
 				reason => u.log(this, reason)
 				);
 	}
@@ -115,7 +130,7 @@ class ConductorChord {
 	}
 
 	registerModule(module){
-		//TODO
+		this.registry.register(module);
 	}
 }
 
