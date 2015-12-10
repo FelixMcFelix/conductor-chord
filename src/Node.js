@@ -125,7 +125,7 @@ class Node{
 	message(id, msg){
 		//TODO
 
-		console.log(`Received message at the local node for ${id}: ${message}
+		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);
 
 		if(ID.inLeftOpenBound(id, this.predecessor, this.id)){
