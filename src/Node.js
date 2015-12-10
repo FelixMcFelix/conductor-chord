@@ -128,12 +128,12 @@ class Node{
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);
 
-		if(ID.inLeftOpenBound(id, this.predecessor, this.id)){
+		if(ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.closestPreceedingFinger(id).message(id, message);
+			this.closestPreceedingFinger(id).message(id, msg);
 		}
 	}
 

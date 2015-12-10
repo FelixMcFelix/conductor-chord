@@ -243,7 +243,18 @@ describe("ID", () => {
 				&& value.inLeftOpenBound(lb, ub)
 				&& value.inRightOpenBound(lb, ub)
 				&& value.inClosedBound(lb, ub)).to.be.true;
-		})
+		});
+
+		it("should include itself if lb = ub and at least one bound is closed", () => {
+			var value = new ID(new Uint8Array([0xff,0x00,0x00])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0xff,0x00,0x00]);
+
+			expect(!value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
 	});
 
 	describe("Specific Forms", () => {

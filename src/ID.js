@@ -147,17 +147,17 @@ class ID {
 
 	static inOpenBound(al_value, al_LB, al_UB){
 		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
-		return bVal[0] && !(bVal[1] || bVal[2]);
+		return bVal[0];
 	}
 
 	static inLeftOpenBound(al_value, al_LB, al_UB){
 		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
-		return bVal[0] || bVal[2] && !bVal[1];
+		return bVal[0] || bVal[2];
 	}
 
 	static inRightOpenBound(al_value, al_LB, al_UB){
 		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
-		return bVal[0] || bVal[1] && !bVal[2];
+		return bVal[0] || bVal[1];
 	}
 
 	static inClosedBound(al_value, al_LB, al_UB){
