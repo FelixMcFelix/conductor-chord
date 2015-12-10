@@ -208,6 +208,8 @@ class ID {
 			return new Uint8Array(arrayLike.buffer);
 		} else if (arrayLike instanceof ID){
 			return arrayLike.dataView;
+		} else if (typeof arrayLike === "string"){
+			return new Uint8Array(StringView.makeFromBase64(input).buffer);
 		} else {
 			throw new TypeError(arrayLike + "is not an array-like type: "+ typeof arrayLike);
 		}
