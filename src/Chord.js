@@ -76,9 +76,11 @@ class ConductorChord {
 		//Set onconnection event to handle connections made to us.
 		this.conductor.onconnection = conn => {
 			conn.ondatachannel = dChan => {
-				dChan.onmessage = (a) => {
-					console.log(a);
-					dChan.send(a);
+				dChan.onmessage = msg => {
+					// console.log(a);
+					// dChan.send(a.data);
+					let parsy = JSON.parse(msg.data)
+					this.message(parsy.id, parsy.data)
 				};
 			}
 		};
@@ -104,7 +106,16 @@ class ConductorChord {
 			.then(
 				result =>{
 					u.log(this, result);
-					result.on("message", (a)=>{console.log(a)});
+					result.on("message", msg => {
+						let parsy = JSON.parse(msg.data)
+						this.message(parsy.id, parsy.data)
+					});
+
+					//Test chain of message handlers.
+					result.send(JSON.stringify({
+						id: result.id,
+						data: "Hello!"
+					}))
 				},
 				reason => u.log(this, reason)
 				);
@@ -131,6 +142,7 @@ class ConductorChord {
 	}
 
 	message(id, msg){
+		console.log(`Received message at the chord for ${id}: ${msg}`);
 		this.node.message(id, msg);
 	}
 

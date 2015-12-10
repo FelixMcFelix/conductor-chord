@@ -124,6 +124,10 @@ class Node{
 	
 	message(id, msg){
 		//TODO
+
+		console.log(`Received message at the local node for ${id}: ${message}
+			I am ${this.id}`);
+
 		if(ID.inLeftOpenBound(id, this.predecessor, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
