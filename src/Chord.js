@@ -79,7 +79,7 @@ class ConductorChord {
 				dChan.onmessage = (a) => {
 					console.log(a);
 					dChan.send(a);
-				});
+				};
 			}
 		};
 
