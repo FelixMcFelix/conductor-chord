@@ -114,7 +114,7 @@ class ConductorChord {
 					//Test chain of message handlers.
 					result.send(JSON.stringify({
 						id: result.id,
-						data: "Hello!"
+						data: JSON.stringify({msg: "Hello!"})
 					}))
 				},
 				reason => u.log(this, reason)
