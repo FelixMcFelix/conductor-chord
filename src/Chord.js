@@ -76,7 +76,7 @@ class ConductorChord {
 		//Set onconnection event to handle connections made to us.
 		this.conductor.onconnection = conn => {
 			conn.ondatachannel = dChan => {
-				dChan.on("message", (a)=>{
+				dChan.onmessage = (a) => {
 					console.log(a);
 					dChan.send(a);
 				});
