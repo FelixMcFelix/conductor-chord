@@ -73,9 +73,14 @@ class ConductorChord {
 		this.conductor = Conductor.create(this.config.conductorConfig);
 		u.log(this, "Channel and conductor created? "+this.conductor!=null);
 
-		//Set onconnection event.
+		//Set onconnection event to handle connections made to us.
 		this.conductor.onconnection = conn => {
-			result.on("message", (a)=>{console.log(a); conn.send(a)});
+			conn.ondatachannel = dChan => {
+				dChan.on("message", (a)=>{
+					console.log(a);
+					dChan.send(a);
+				});
+			}
 		};
 
 		//Create a module registry, register the RPC default module.
