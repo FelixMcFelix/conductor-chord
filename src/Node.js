@@ -22,21 +22,31 @@ class Node{
 	//Redo these as time goes on.
 
 	getSuccessor(){
-		return new Promise(resolve => resolve(this.finger[0].node)); 
+		console.log(this);
+
+		return new Promise((resolve, reject) => {
+			resolve(this.finger[0].node)
+		}); 
 	}
 
 	setSuccessor(val){
-		this.finger[0] = val;
-		return new Promise(resolve => resolve());
+		return new Promise((resolve, reject) => {
+			this.finger[0].node = val;
+			resolve()
+		});
 	}
 
 	getPredecessor(){
-		return new Promise(resolve => resolve(this.predecessor)); 
+		return new Promise((resolve, reject) => {
+			resolve(this.predecessor)
+		}); 
 	}
 
 	setPredecessor(val){
-		this._predecessor = val;
-		return new Promise(resolve => resolve());
+		return new Promise((resolve, reject) => {
+			this.predecessor = val;
+			resolve();
+		});
 	}
 
 	initOn(knownNode){
@@ -107,8 +117,17 @@ class Node{
 
 	//Stabilization methods
 	stableJoin(knownNode){
-		this.setPredecessor(null);
-		this.setSuccessor(knownNode);
+		return new Promise ( (resolve, reject) => {
+			this.setPredecessor(null)
+			.then(
+				res => this.setSuccessor(knownNode)
+			)
+			.then(
+				res => resolve(res),
+				rea => reject(rea)
+			)
+		});
+	
 	}
 
 	//periodically verify n's immediate successor
@@ -134,6 +153,8 @@ class Node{
 	
 	message(id, msg){
 		//TODO
+
+		debugger;
 
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);

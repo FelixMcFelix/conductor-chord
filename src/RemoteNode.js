@@ -107,12 +107,12 @@ class RemoteNode {
 	message(id, msg){
 		if(this.connection
 			&& this.connection.connection
-			&& this.connection.connection.iceconnectionstate === "connected"
-			|| this.connection.connection.iceconnectionstate === "completed"
+			&& (this.connection.connection.iceConnectionState === "connected"
+			|| this.connection.connection.iceConnectionState === "completed")
 			)
 			this.connection.send(JSON.stringify({id, data: msg}));
 		else {
-			console.log("Creating new conenction - none found or not open.")
+			console.log("Creating new connection - none found or not open.")
 			this.chord.conductor.connectTo(id)
 				.then(result => {
 					this.connection = result;

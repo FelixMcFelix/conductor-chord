@@ -120,12 +120,13 @@ class ConductorChord {
 					// 	data: JSON.stringify({msg: "Hello!"})
 					// }))
 
-					this.node.stableJoin(srvNode);
-
-					srvNode.getSuccessor()
+					this.node.stableJoin(srvNode)
+						.then(
+							x => {return srvNode.getSuccessor()}
+						)
 						.then(
 							x => u.log(this, x)
-							)
+						)
 
 				},
 				reason => u.log(this, reason)
@@ -153,7 +154,7 @@ class ConductorChord {
 	}
 
 	message(id, msg){
-		console.log(`Received message at the chord for ${id}: ${msg}`);
+		console.log(`Received message at the chord for ${id.idString}: ${msg}`);
 		this.node.message(id, msg);
 	}
 
