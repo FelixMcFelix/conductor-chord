@@ -159,7 +159,7 @@ class Node{
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);
 
-		if (!this.predecessor){
+		if (!this.predecessor && ID.compare(this.id, id)!==0){
 			this.getSuccessor()
 				.then(
 					result => result.message(id, msg)
