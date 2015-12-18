@@ -15,7 +15,8 @@ class RemoteCallModule {
 		let reqID = this.reqID++,
 			msgText = ModuleRegistry.wrap(this.id, method, {
 				params,
-				reqID
+				reqID,
+				returnID: this.chord.id.idString
 			});
 
 		this.chord.message(id, msgText);
@@ -28,13 +29,28 @@ class RemoteCallModule {
 	delegate(handler, message){
 		switch(handler){
 			case "getSuccessor":
+				this.chord.node.getSuccessor()
+					.then(
+						result => this.answer(message.returnID, message.reqID, result.id.idString)
+					);
 				break;
 			case "setSuccessor":
+				this.chord.node.setSuccessor()
+					.then(
+						result => this.answer(message.returnID, message.reqID, null)
+					);
 				break;
 			case "getPredecessor":
+				this.chord.node.getPredecessor()
+					.then(
+						result => this.answer(message.returnID, message.reqID, result.id.idString)
+					);
 				break;
 			case "setPredecessor":
-				break;
+				this.chord.node.setPredecessor()
+					.then(
+						result => this.answer(message.returnID, message.reqID, null)
+					);
 			case "updateFingerTable":
 				break;
 			case "findSuccessor":
@@ -52,17 +68,25 @@ class RemoteCallModule {
 			case "add":
 				break;
 			case "answer":
-				this.requestSpace[message.id].resolve(message.result);
-				delete this.requestSpace[message.id];
+				this.requestSpace[message.reqID].resolve(message.result);
+				delete this.requestSpace[message.reqID];
 				break;
 			case "error":
-				this.requestSpace[message.id].reject(message.reason);
-				delete this.requestSpace[message.id];
+				this.requestSpace[message.reqID].reject(message.reason);
+				delete this.requestSpace[message.reqID];
 				break;
 			default:
 				//ILLEGAL CALL
 				break;
 		}
+	}
+
+	answer(returnID, reqID, result){
+		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "answer", {reqID, result}));
+	}
+
+	error(returnID, reqID, result){
+		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "error", {reqID, result}));
 	}
 }
 

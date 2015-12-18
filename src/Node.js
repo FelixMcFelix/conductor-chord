@@ -21,12 +21,22 @@ class Node{
 	//These show the algorithms, but they do not account for RPC, promises, callbacks etc...
 	//Redo these as time goes on.
 
-	get successor(){
-		return this.finger[0].node;
+	getSuccessor(){
+		return new Promise(resolve => resolve(this.finger[0].node)); 
 	}
 
-	set successor(val){
+	setSuccessor(val){
 		this.finger[0] = val;
+		return new Promise(resolve => resolve());
+	}
+
+	getPredecessor(){
+		return new Promise(resolve => resolve(this.predecessor)); 
+	}
+
+	setPredecessor(val){
+		this._predecessor = val;
+		return new Promise(resolve => resolve());
 	}
 
 	initOn(knownNode){

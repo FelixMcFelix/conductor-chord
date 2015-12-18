@@ -111,11 +111,19 @@ class ConductorChord {
 						this.message(parsy.id, parsy.data)
 					});
 
+					let srvNode = new RemoteNode(this, new ID(result.id), result);
+
 					//Test chain of message handlers.
-					result.send(JSON.stringify({
-						id: result.id,
-						data: JSON.stringify({msg: "Hello!"})
-					}))
+					// result.send(JSON.stringify({
+					// 	id: result.id,
+					// 	data: JSON.stringify({msg: "Hello!"})
+					// }))
+
+					srvNode.getSuccessor()
+						.then(
+							x => u.log(this, x)
+							)
+
 				},
 				reason => u.log(this, reason)
 				);
