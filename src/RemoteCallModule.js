@@ -13,7 +13,7 @@ class RemoteCallModule {
 
 	call(id, method, params){
 		let reqID = this.reqID++,
-			destID = (typeof id === "string") ? id : id.idString;
+			destID = (typeof id === "string") ? id : id.idString,
 			msgText = ModuleRegistry.wrap(this.id, method, {
 				params,
 				reqID,
