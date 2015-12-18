@@ -22,7 +22,7 @@ class RemoteCallModule {
 		this.chord.message(id, msgText);
 
 		return new Promise((resolve, reject) => {
-			requestSpace[reqID] = {resolve, reject};
+			this.requestSpace[reqID] = {resolve, reject};
 		});
 	}
 

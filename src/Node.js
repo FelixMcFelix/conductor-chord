@@ -107,8 +107,8 @@ class Node{
 
 	//Stabilization methods
 	stableJoin(knownNode){
-		this.predecessor = null;
-		this.successor = knownNode;
+		this.setPredecessor(null);
+		this.setSuccessor(knownNode);
 	}
 
 	//periodically verify n's immediate successor
@@ -138,7 +138,12 @@ class Node{
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);
 
-		if(ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
+		if (!this.predecessor){
+			this.getSuccessor()
+				.then(
+					result => result.message(id, msg)
+					)
+		} else if (ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
 		} else {
