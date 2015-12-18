@@ -13,13 +13,14 @@ class RemoteCallModule {
 
 	call(id, method, params){
 		let reqID = this.reqID++,
+			destID = (typeof id === "string") ? id : id.idString;
 			msgText = ModuleRegistry.wrap(this.id, method, {
 				params,
 				reqID,
 				returnID: this.chord.id.idString
 			});
 
-		this.chord.message(id, msgText);
+		this.chord.message(destID, msgText);
 
 		return new Promise((resolve, reject) => {
 			this.requestSpace[reqID] = {resolve, reject};
