@@ -3,7 +3,7 @@
 const Node = require("./Node.js");
 
 class RemoteNode extends Node{
-	constructor(chord, id, optConn]){
+	constructor(chord, id, optConn){
 		this.chord = chord;
 		this.id = id;
 
