@@ -164,7 +164,7 @@ class Node{
 				.then(
 					result => result.message(id, msg)
 					)
-		} else if (ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
+		} else if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
 		} else {
