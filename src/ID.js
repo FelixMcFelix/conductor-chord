@@ -214,6 +214,14 @@ class ID {
 			throw new TypeError(arrayLike + "is not an array-like type: "+ typeof arrayLike);
 		}
 	}
+
+	static coerceString(unknownIDType){
+		if (typeof unknownIDType === "string") {
+			return unknownIDType
+		} else {
+			return unknownIDType.idString;
+		}
+	}
 }
 
 module.exports = ID;

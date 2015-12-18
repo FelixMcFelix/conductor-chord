@@ -83,6 +83,7 @@ class ConductorChord {
 					let parsy = JSON.parse(msg.data)
 					this.message(parsy.id, parsy.data)
 				};
+				this.externalNodes[conn.id] = new RemoteNode(this, new ID(conn.id), conn)
 			}
 		};
 
@@ -96,6 +97,9 @@ class ConductorChord {
 			u.log(this, "Initialising server backing channel.");
 			this.conductor.register(new BootstrapChannelServer(this));
 		}
+
+		//space to store, well, external nodes - if you're a server, for instance.
+		this.externalNodes = {};
 	}
 
 	join(addr){
@@ -154,8 +158,12 @@ class ConductorChord {
 	}
 
 	message(id, msg){
-		console.log(`Received message at the chord for ${id.idString}: ${msg}`);
-		this.node.message(id, msg);
+		console.log(`Received message at the chord for ${ID.coerceString(id)}: ${msg}`);
+
+		if(this.externalNodes[ID.coerceString(id)])
+			this.externalNodes[ID.coerceString(id)].message(id, msg);
+		else
+			this.node.message(id, msg);
 	}
 
 	registerModule(module){
