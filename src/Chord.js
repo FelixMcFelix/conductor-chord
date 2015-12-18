@@ -120,6 +120,8 @@ class ConductorChord {
 					// 	data: JSON.stringify({msg: "Hello!"})
 					// }))
 
+					this.node.stableJoin(srvNode);
+
 					srvNode.getSuccessor()
 						.then(
 							x => u.log(this, x)

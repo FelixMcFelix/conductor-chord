@@ -2,7 +2,7 @@
 
 const Node = require("./Node.js");
 
-class RemoteNode extends Node{
+class RemoteNode {
 	constructor(chord, id, optConn){
 		this.chord = chord;
 		this.id = id;
@@ -15,7 +15,7 @@ class RemoteNode extends Node{
 	getSuccessor(){
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "getSuccessor", [])
+			this.chord.rcm.call(this.id, "getSuccessor", [])
 				.then(result => resolve(result),
 					reason => reject(reason)
 				);
