@@ -124,7 +124,7 @@ class Node{
 					res => {return res.updateFingerTable(foreignNode, index)}
 				)
 		} else {
-			return new Promise((res, rej)=>res());
+			return Promise.resolve();
 		}
 
 	}

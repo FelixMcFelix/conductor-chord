@@ -59,12 +59,28 @@ class RemoteCallModule {
 					);
 				break;
 			case "findSuccessor":
+				this.chord.node.findSuccessor(new ID(message.params[0]))
+					.then(
+						result => this.answer(message.returnID, message.reqID, result.id.idString)
+					);
 				break;
 			case "findPredecessor":
+				this.chord.node.findPredecessor(new ID(message.params[0]))
+					.then(
+						result => this.answer(message.returnID, message.reqID, result.id.idString)
+					);
 				break;
 			case "closestPreceedingFinger":
+				this.chord.node.closestPreceedingFinger(new RemoteNode(this.chord, new ID(message.params[0]), null))
+					.then(
+						result => this.answer(message.returnID, message.reqID, result.id.idString)
+					);
 				break;
 			case "notify":
+				this.chord.node.updateFingerTable(new RemoteNode(this.chord, new ID(message.params[0]), null))
+					.then(
+						result => this.answer(message.returnID, message.reqID, null)
+					);
 				break;
 			case "message":
 				break;
