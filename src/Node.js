@@ -53,14 +53,20 @@ class Node{
 
 	//Promise updated
 	initOn(knownNode){
+		this.chord.server.connect = true;
 		if(knownNode){
-			this.initialiseFingerTable(knownNode)
+			return this.initialiseFingerTable(knownNode)
 				.then(this.updateOthers)
+				.then( () => {
+					this.chord.server.connect = false;
+				} );
 			//move keys from successor to self as well.
 		} else {
 			for(var i=0; i<chord.config.idwidth; i++)
 				this.finger[i].node = this;
 			this.predecessor = this;
+			this.chord.server.connect = false;
+			return Promise.resolve();
 		}
 
 	}
@@ -80,7 +86,7 @@ class Node{
 			.then(this.setPredecessor)
 			.then(
 				res => {
-					let proms = []
+					let proms = [];
 
 					for(var i=0; i<this.finger.length-1; i++) {
 						if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
@@ -88,7 +94,7 @@ class Node{
 						else {
 							proms.push(knownNode.findSuccessor(this.finger[i+1].start))
 						}
-					};
+					}
 
 					return proms.all();
 				}
@@ -102,14 +108,14 @@ class Node{
 
 		for (var i = 0; i < this.finger.length; i++) {
 			//find last node p whose ith finger might be n
-			(()=>{proms.push(
+			(i=>{proms.push(
 				this.findPredecessor(this.id.subtract(ID.powerOfTwoBuffer(i)))
 					.then(
 						p => {return p.updateFingerTable(this.id, i)}
 					)
 				)
-			})(i)
-		};
+			})(i);
+		}
 
 		return proms.all();
 	}
@@ -118,7 +124,7 @@ class Node{
 	updateFingerTable(foreignNode, index){
 		//Update the finger of some remote node
 		if(ID.inRightOpenBound(foreignNode.id, this.id, this.finger[index].node)){
-			this.finger[index].node = foreignID;
+			this.finger[index].node = foreignNode;
 			return this.getPredecessor()
 				.then(
 					res => {return res.updateFingerTable(foreignNode, index)}
@@ -130,16 +136,16 @@ class Node{
 	}
 	
 	//Promise updated
-	closestPreceedingFinger(id){
+	closestPrecedingFinger(id){
 		return new Promise( resolve => {
 			for (var i = this.finger.length - 1; i >= 0; i--) {
 				if(ID.inOpenBound(this.finger[i].node.id, this.id, id)){
 					resolve(this.finger[i].node);
 					break;
 				}
-			};
+			}
 			resolve(this);
-		} )
+		} );
 	}
 	
 	//Promise updated
@@ -157,8 +163,8 @@ class Node{
 				nPrime.getSuccessor()
 					.then(
 						succ => {
-							if (!ID.inLeftOpenBound(id, nPrime, succ)) {
-								nPrime.closestPreceedingFinger()
+							if (!ID.inLeftOpenBound(id, nPrime.id, succ.id)) {
+								nPrime.closestPrecedingFinger()
 									.then(
 										newPrime => {
 											nPrime = newPrime;
@@ -172,7 +178,7 @@ class Node{
 						},
 						rea => reject(rea)
 					)
-				}
+				};
 
 			condUpd();
 		} )
@@ -183,7 +189,10 @@ class Node{
 	stableJoin(knownNode){
 		return this.setPredecessor(null)
 			.then(
-				res => this.setSuccessor(knownNode)
+				res => {
+					this.setSuccessor(knownNode);
+					this.chord.server.connect = true;
+				}
 			);
 	}
 
@@ -197,7 +206,7 @@ class Node{
 			.then(succ => {oSucc = succ; return succ.getPredecessor()})
 			.then(pred => {
 				if(ID.inOpenBound(pred.id, this.id, oSucc.id))
-					return this.setSuccessor(pred)
+					return this.setSuccessor(pred);
 				else
 					return Promise.resolve();
 			})
@@ -235,17 +244,12 @@ class Node{
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);
 
-		if (!this.predecessor && ID.compare(this.id, id)!==0){
-			this.getSuccessor()
-				.then(
-					result => result.message(id, msg)
-					)
-		} else if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
+		if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.closestPreceedingFinger(id).message(id, msg);
+			this.closestPrecedingFinger(id).message(id, msg);
 		}
 	}
 

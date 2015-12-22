@@ -1,6 +1,7 @@
 "use strict";
 
-const ModuleRegistry = require("./ModuleRegistry");
+const ModuleRegistry = require("./ModuleRegistry"),
+	ID = require("./ID.js");
 
 class RemoteCallModule {
 	constructor(chord){
@@ -70,8 +71,8 @@ class RemoteCallModule {
 						result => this.answer(message.returnID, message.reqID, result.id.idString)
 					);
 				break;
-			case "closestPreceedingFinger":
-				this.chord.node.closestPreceedingFinger(new RemoteNode(this.chord, new ID(message.params[0]), null))
+			case "closestPrecedingFinger":
+				this.chord.node.closestPrecedingFinger(new RemoteNode(this.chord, new ID(message.params[0]), null))
 					.then(
 						result => this.answer(message.returnID, message.reqID, result.id.idString)
 					);

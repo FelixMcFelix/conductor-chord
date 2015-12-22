@@ -80,7 +80,7 @@ class ConductorChord {
 				dChan.onmessage = msg => {
 					// console.log(a);
 					// dChan.send(a.data);
-					let parsy = JSON.parse(msg.data)
+					let parsy = JSON.parse(msg.data);
 					this.message(parsy.id, parsy.data)
 				};
 				this.externalNodes[conn.id] = new RemoteNode(this, new ID(conn.id), conn)
@@ -100,23 +100,29 @@ class ConductorChord {
 
 		//space to store, well, external nodes - if you're a server, for instance.
 		this.externalNodes = {};
+		this.server = {
+			connect: false,
+			node: null
+		};
 	}
 
 	join(addr){
 		u.log(this, "Joining "+addr);
 
-		let chan = new BootstrapChannelClient(addr, this)
+		let chan = new BootstrapChannelClient(addr, this);
 
 		this.conductor.connectTo(this.id.idString, chan)
 			.then(
 				result =>{
 					u.log(this, result);
 					result.on("message", msg => {
-						let parsy = JSON.parse(msg.data)
-						this.message(parsy.id, parsy.data)
+						let parsy = JSON.parse(msg.data);
+						this.message(parsy.id, parsy.data);
 					});
 
 					let srvNode = new RemoteNode(this, new ID(result.id), result);
+
+					this.server.node = srvNode;
 
 					//Test chain of message handlers.
 					// result.send(JSON.stringify({
@@ -160,7 +166,9 @@ class ConductorChord {
 	message(id, msg){
 		console.log(`Received message at the chord for ${ID.coerceString(id)}: ${msg}`);
 
-		if(this.externalNodes[ID.coerceString(id)])
+		if(this.server.connect)
+			this.server.node.message(id, msg);
+		else if(this.externalNodes[ID.coerceString(id)])
 			this.externalNodes[ID.coerceString(id)].message(id, msg);
 		else
 			this.node.message(id, msg);
