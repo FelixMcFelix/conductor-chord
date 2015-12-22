@@ -58,43 +58,34 @@ class RemoteNode {
 	}
 
 	findSuccessor(id){
-		//TODO
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "getSuccessor", [])
-				.then(result => resolve(result),
+			chord.rcm.call(this.id, "findSuccessor", [ID.coerceString(id)])
+				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
 		});
 	}
 
 	findPredecessor(id){
-		//TODO
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "getSuccessor", [])
-				.then(result => resolve(result),
+			chord.rcm.call(this.id, "findPredecessor", [ID.coerceString(id)])
+				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
 		});
 	}
 
 	closestPreceedingFinger(id){
-		//TODO
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "getSuccessor", [])
-				.then(result => resolve(result),
+			chord.rcm.call(this.id, "closestPreceedingFinger", [ID.coerceString(id)])
+				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
 		});
 	}
 
 	notify(nPrime){
-		//TODO
-		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "getSuccessor", [])
-				.then(result => resolve(result),
-					reason => reject(reason)
-				);
-		});
+		return chord.rcm.call(this.id, "notify", [ID.coerceString(nPrime.id)]);
 	}
 
 	//Custom
