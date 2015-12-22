@@ -21,38 +21,41 @@ class Node{
 	//These show the algorithms, but they do not account for RPC, promises, callbacks etc...
 	//Redo these as time goes on.
 
+	//Promise updated
 	getSuccessor(){
-		console.log(this);
-
 		return new Promise((resolve, reject) => {
 			resolve(this.finger[0].node)
 		}); 
 	}
 
+	//Promise updated
 	setSuccessor(val){
 		return new Promise((resolve, reject) => {
 			this.finger[0].node = val;
-			resolve()
+			resolve(val)
 		});
 	}
 
+	//Promise updated
 	getPredecessor(){
 		return new Promise((resolve, reject) => {
 			resolve(this.predecessor)
 		}); 
 	}
 
+	//Promise updated
 	setPredecessor(val){
 		return new Promise((resolve, reject) => {
 			this.predecessor = val;
-			resolve();
+			resolve(val);
 		});
 	}
 
+	//Promise updated
 	initOn(knownNode){
 		if(knownNode){
-			this.initialiseFingerTable(knownNode);
-			this.updateOthers();
+			this.initialiseFingerTable(knownNode)
+				.then(this.updateOthers)
 			//move keys from successor to self as well.
 		} else {
 			for(var i=0; i<chord.config.idwidth; i++)
@@ -62,91 +65,164 @@ class Node{
 
 	}
 	
+	//Promise updated
 	initialiseFingerTable(knownNode){
-		this.finger[0].node = knownNode.findSuccessor(finger[0].start);
-		this.predecessor = successor.predecessor;
-		successor.predecessor = this;
+		let succ;
 
-		for(var i=0; i<this.finger.length-1; i++) {
-			if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
-				this.finger[i+1].node = this.finger[i].node;
-			else
-				this.finger[i+1].node = knownNode.findSuccessor(this.finger[i+1].start);
-		};
+		return knownNode.findSuccessor(this.finger[0].start)
+			.then(this.setSuccessor)
+			.then(
+				res => {
+					succ = res;
+					return succ.getPredecessor();
+				}
+			)
+			.then(this.setPredecessor)
+			.then(
+				res => {
+					let proms = []
+
+					for(var i=0; i<this.finger.length-1; i++) {
+						if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
+							this.finger[i+1].node = this.finger[i].node;
+						else {
+							proms.push(knownNode.findSuccessor(this.finger[i+1].start))
+						}
+					};
+
+					return proms.all();
+				}
+			);
 	}
 
+	//Promise updated
 	updateOthers(){
 		//Inform other nodes about our existence.
+		let proms = [];
+
 		for (var i = 0; i < this.finger.length; i++) {
 			//find last node p whose ith finger might be n
-			let p = findPredecessor(this.id.subtract(ID.powerOfTwoBuffer(i)))
-			p.updateFingerTable(this.id, i)
+			(()=>{proms.push(
+				this.findPredecessor(this.id.subtract(ID.powerOfTwoBuffer(i)))
+					.then(
+						p => {return p.updateFingerTable(this.id, i)}
+					)
+				)
+			})(i)
 		};
+
+		return proms.all();
 	}
 
-	updateFingerTable(foreignId, index){
+	//Promise updated
+	updateFingerTable(foreignNode, index){
 		//Update the finger of some remote node
-		if(ID.inRightOpenBound(foreignId, this.id, this.finger[index].node)){
-			this.finger[index] = foreignID;
-			let p = this.predecessor;
-			p.updateFingerTable(foreignID, index);
+		if(ID.inRightOpenBound(foreignNode.id, this.id, this.finger[index].node)){
+			this.finger[index].node = foreignID;
+			return this.getPredecessor()
+				.then(
+					res => {return res.updateFingerTable(foreignNode, index)}
+				)
+		} else {
+			return new Promise((res, rej)=>res());
 		}
+
 	}
 	
+	//Promise updated
 	closestPreceedingFinger(id){
-		for (var i = this.finger.length - 1; i >= 0; i--) {
-			if(ID.inOpenBound(this.finger[i].node.id, this.id, id)){
-				return this.finger[i].node;
-			}
-		};
-		return this;
+		return new Promise( resolve => {
+			for (var i = this.finger.length - 1; i >= 0; i--) {
+				if(ID.inOpenBound(this.finger[i].node.id, this.id, id)){
+					resolve(this.finger[i].node);
+					break;
+				}
+			};
+			resolve(this);
+		} )
 	}
 	
+	//Promise updated
 	findSuccessor(id){
-		let nPrime = this.findPredecessor(id);
-		return nPrime.successor;
+		return this.findPredecessor(id)
+			.then( nPrime => { return nPrime.getSuccessor() } )
 	}
 	
+	//Promise updated
 	findPredecessor(id){
-		let nPrime = this;
-		while(!ID.inLeftOpenBound(id, nPrime, nPrime.successor)){
-			nPrime = nPrime.closestPreceedingFinger(id);
-		}
-		return nPrime;
+		return new Promise( (resolve, reject) => {
+			let nPrime = this;
+
+			let condUpd = () => {
+				nPrime.getSuccessor()
+					.then(
+						succ => {
+							if (!ID.inLeftOpenBound(id, nPrime, succ)) {
+								nPrime.closestPreceedingFinger()
+									.then(
+										newPrime => {
+											nPrime = newPrime;
+											condUpd();
+										},
+										rea => reject(rea)
+									)
+							} else {
+								resolve(nPrime);
+							}
+						},
+						rea => reject(rea)
+					)
+				}
+
+			condUpd();
+		} )
 	}
 
 	//Stabilization methods
+	//Promise updated
 	stableJoin(knownNode){
-		return new Promise ( (resolve, reject) => {
-			this.setPredecessor(null)
+		return this.setPredecessor(null)
 			.then(
 				res => this.setSuccessor(knownNode)
-			)
-			.then(
-				res => resolve(res),
-				rea => reject(rea)
-			)
-		});
-	
+			);
 	}
 
 	//periodically verify n's immediate successor
 	//and tell the successor about n.
+	//Promise updated
 	stabilize(){
-		let x = this.successor.predecessor;
-		if(ID.inOpenBound(x.id, this.id, this.successor.id))
-			this.successor = x;
-		this.successor.notify(this);
+		let oSucc;
+
+		return this.getSuccessor()
+			.then(succ => {oSucc = succ; return succ.getPredecessor()})
+			.then(pred => {
+				if(ID.inOpenBound(pred.id, this.id, oSucc.id))
+					return this.setSuccessor(pred)
+				else
+					return Promise.resolve();
+			})
+			.then(
+				res => {return oSucc.notify(this);}
+			)
+
 	}
 
+	//Promise updated
 	notify(nPrime){
 		if(this.predecessor === null || ID.inOpenBound(nPrime.id, this.predecessor.id, this.id))
 			this.predecessor = nPrime;
+		return Promise.resolve();
 	}
 
+	//Promise updated
 	fixFingers(){
-		let i = Math.random() * (this.finger.length-1) + 1;
+		let i = Math.floor(Math.random() * (this.finger.length-1) + 1);
 		this.finger[i].node = this.findSuccessor(this.finger[i].start);
+
+		return this.findSuccessor(this.finger[i].start)
+			.then(
+				succ => this.finger[i].node = succ
+			)
 	}
 
 	//Custom
@@ -154,7 +230,7 @@ class Node{
 	message(id, msg){
 		//TODO
 
-		debugger;
+		// debugger;
 
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);

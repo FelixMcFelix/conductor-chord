@@ -36,7 +36,7 @@ class RemoteCallModule {
 					);
 				break;
 			case "setSuccessor":
-				this.chord.node.setSuccessor()
+				this.chord.node.setSuccessor(new RemoteNode(this.chord, new ID(message.params[0]), null))
 					.then(
 						result => this.answer(message.returnID, message.reqID, null)
 					);
@@ -48,11 +48,15 @@ class RemoteCallModule {
 					);
 				break;
 			case "setPredecessor":
-				this.chord.node.setPredecessor()
+				this.chord.node.setPredecessor(new RemoteNode(this.chord, new ID(message.params[0]), null))
 					.then(
 						result => this.answer(message.returnID, message.reqID, null)
 					);
 			case "updateFingerTable":
+				this.chord.node.updateFingerTable(new ID(message.params[0]), message.params[1])
+					.then(
+						result => this.answer(message.returnID, message.reqID, null)
+					);
 				break;
 			case "findSuccessor":
 				break;
