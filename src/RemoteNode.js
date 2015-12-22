@@ -75,9 +75,9 @@ class RemoteNode {
 		});
 	}
 
-	closestPreceedingFinger(id){
+	closestPrecedingFinger(id){
 		return new Promise((resolve, reject) => {
-			this.chord.rcm.call(this.id, "closestPreceedingFinger", [ID.coerceString(id)])
+			this.chord.rcm.call(this.id, "closestPrecedingFinger", [ID.coerceString(id)])
 				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
