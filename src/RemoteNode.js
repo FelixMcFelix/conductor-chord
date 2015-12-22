@@ -26,7 +26,7 @@ class RemoteNode {
 	setSuccessor(s){
 		//Send them an ID, return the remotenode supplied.
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "setSuccessor", [ID.coerceString(s.id)])
+			this.chord.rcm.call(this.id, "setSuccessor", [ID.coerceString(s.id)])
 				.then(result => resolve(s),
 					reason => reject(reason)
 				);
@@ -36,7 +36,7 @@ class RemoteNode {
 	getPredecessor(){
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "getPredecessor", [])
+			this.chord.rcm.call(this.id, "getPredecessor", [])
 				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
@@ -46,7 +46,7 @@ class RemoteNode {
 	setPredecessor(p){
 		//Send them an ID, return the remotenode supplied.
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "setPredecessor", [ID.coerceString(p.id)])
+			this.chord.rcm.call(this.id, "setPredecessor", [ID.coerceString(p.id)])
 				.then(result => resolve(p),
 					reason => reject(reason)
 				);
@@ -54,12 +54,12 @@ class RemoteNode {
 	}
 
 	updateFingerTable(foreignNode, index){
-		return chord.rcm.call(this.id, "updateFingerTable", [ID.coerceString(foreignNode.id), index]);
+		return this.chord.rcm.call(this.id, "updateFingerTable", [ID.coerceString(foreignNode.id), index]);
 	}
 
 	findSuccessor(id){
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "findSuccessor", [ID.coerceString(id)])
+			this.chord.rcm.call(this.id, "findSuccessor", [ID.coerceString(id)])
 				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
@@ -68,7 +68,7 @@ class RemoteNode {
 
 	findPredecessor(id){
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "findPredecessor", [ID.coerceString(id)])
+			this.chord.rcm.call(this.id, "findPredecessor", [ID.coerceString(id)])
 				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
@@ -77,7 +77,7 @@ class RemoteNode {
 
 	closestPreceedingFinger(id){
 		return new Promise((resolve, reject) => {
-			chord.rcm.call(this.id, "closestPreceedingFinger", [ID.coerceString(id)])
+			this.chord.rcm.call(this.id, "closestPreceedingFinger", [ID.coerceString(id)])
 				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
 					reason => reject(reason)
 				);
@@ -85,7 +85,7 @@ class RemoteNode {
 	}
 
 	notify(nPrime){
-		return chord.rcm.call(this.id, "notify", [ID.coerceString(nPrime.id)]);
+		return this.chord.rcm.call(this.id, "notify", [ID.coerceString(nPrime.id)]);
 	}
 
 	//Custom
