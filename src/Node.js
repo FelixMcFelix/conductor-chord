@@ -70,7 +70,7 @@ class Node{
 		}
 
 	}
-	
+
 	//Promise updated
 	initialiseFingerTable(knownNode){
 		let succ;
@@ -244,7 +244,9 @@ class Node{
 		console.log(`Received message at the local node for ${id}: ${msg}
 			I am ${this.id}`);
 
-		if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
+		if(this.chord.server.connect && ID.compare(id, this.id)!== 0) {
+			this.chord.server.node.message(id, msg);
+		} else if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
 		} else {

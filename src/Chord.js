@@ -166,9 +166,7 @@ class ConductorChord {
 	message(id, msg){
 		console.log(`Received message at the chord for ${ID.coerceString(id)}: ${msg}`);
 
-		if(this.server.connect)
-			this.server.node.message(id, msg);
-		else if(this.externalNodes[ID.coerceString(id)])
+		if(this.externalNodes[ID.coerceString(id)])
 			this.externalNodes[ID.coerceString(id)].message(id, msg);
 		else
 			this.node.message(id, msg);
