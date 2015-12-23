@@ -30,6 +30,7 @@ class Node{
 
 	//Promise updated
 	setSuccessor(val){
+		console.log(this)
 		return new Promise((resolve, reject) => {
 			this.finger[0].node = val;
 			resolve(val)
@@ -56,7 +57,9 @@ class Node{
 		this.chord.server.connect = true;
 		if(knownNode){
 			return this.initialiseFingerTable(knownNode)
-				.then(this.updateOthers)
+				.then( () => {
+					return this.updateOthers();
+				} )
 				.then( () => {
 					this.chord.server.connect = false;
 				} );
@@ -73,30 +76,34 @@ class Node{
 
 	//Promise updated
 	initialiseFingerTable(knownNode){
-		let succ;
-
 		return knownNode.findSuccessor(this.finger[0].start)
-			.then(this.setSuccessor)
 			.then(
-				res => {
-					succ = res;
-					return succ.getPredecessor();
-				}
+				succ => {return this.setSuccessor(succ);}
 			)
-			.then(this.setPredecessor)
 			.then(
-				res => {
+				succ => {return succ.getPredecessor();}
+			)
+			.then(
+				pred => {return this.setPredecessor(pred);}
+			)
+			.then(
+				() => {
 					let proms = [];
 
 					for(var i=0; i<this.finger.length-1; i++) {
 						if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
 							this.finger[i+1].node = this.finger[i].node;
 						else {
-							proms.push(knownNode.findSuccessor(this.finger[i+1].start))
+							proms.push(
+								knownNode.findSuccessor(this.finger[i+1].start)
+									.then(
+										succ => this.finger[i+1].node = succ
+									)
+							)
 						}
 					}
 
-					return proms.all();
+					return Promise.all(proms);
 				}
 			);
 	}
@@ -117,7 +124,7 @@ class Node{
 			})(i);
 		}
 
-		return proms.all();
+		return Promise.all(proms);
 	}
 
 	//Promise updated
