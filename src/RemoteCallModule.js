@@ -1,6 +1,7 @@
 "use strict";
 
 const ModuleRegistry = require("./ModuleRegistry"),
+	RemoteNode = require("./RemoteNode.js"),
 	ID = require("./ID.js");
 
 class RemoteCallModule {
@@ -53,6 +54,7 @@ class RemoteCallModule {
 					.then(
 						result => this.answer(message.returnID, message.reqID, null)
 					);
+				break;
 			case "updateFingerTable":
 				this.chord.node.updateFingerTable(new ID(message.params[0]), message.params[1])
 					.then(

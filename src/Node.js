@@ -97,7 +97,9 @@ class Node{
 							proms.push(
 								knownNode.findSuccessor(this.finger[i+1].start)
 									.then(
-										succ => this.finger[i+1].node = succ
+										succ => {
+											this.finger[i+1].node = succ;
+										}
 									)
 							)
 						}
@@ -118,7 +120,7 @@ class Node{
 			(i=>{proms.push(
 				this.findPredecessor(this.id.subtract(ID.powerOfTwoBuffer(i)))
 					.then(
-						p => {return p.updateFingerTable(this.id, i)}
+						p => {return p.updateFingerTable(this, i)}
 					)
 				)
 			})(i);
