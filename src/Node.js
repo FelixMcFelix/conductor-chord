@@ -30,7 +30,6 @@ class Node{
 
 	//Promise updated
 	setSuccessor(val){
-		console.log(this)
 		return new Promise((resolve, reject) => {
 			this.finger[0].node = val;
 			resolve(val)
@@ -94,14 +93,16 @@ class Node{
 						if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
 							this.finger[i+1].node = this.finger[i].node;
 						else {
-							proms.push(
-								knownNode.findSuccessor(this.finger[i+1].start)
-									.then(
-										succ => {
-											this.finger[i+1].node = succ;
-										}
-									)
-							)
+							(i=>{
+								proms.push(
+									knownNode.findSuccessor(this.finger[i+1].start)
+										.then(
+											succ => {
+												this.finger[i+1].node = succ;
+											}
+										)
+								)
+							})(i)
 						}
 					}
 
