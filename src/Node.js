@@ -174,7 +174,7 @@ class Node{
 					.then(
 						succ => {
 							if (!ID.inLeftOpenBound(id, nPrime.id, succ.id)) {
-								nPrime.closestPrecedingFinger()
+								nPrime.closestPrecedingFinger(id)
 									.then(
 										newPrime => {
 											nPrime = newPrime;
@@ -261,7 +261,10 @@ class Node{
 			this.chord.registry.parse(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.closestPrecedingFinger(id).message(id, msg);
+			this.closestPrecedingFinger(id)
+				.then(
+					node => node.message(id, msg)
+				)
 		}
 	}
 
