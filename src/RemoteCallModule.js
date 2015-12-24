@@ -56,7 +56,7 @@ class RemoteCallModule {
 					);
 				break;
 			case "updateFingerTable":
-				this.chord.node.updateFingerTable(new ID(message.params[0]), message.params[1])
+				this.chord.node.updateFingerTable(new RemoteNode(this.chord, new ID(message.params[0]), null), message.params[1])
 					.then(
 						result => this.answer(message.returnID, message.reqID, null)
 					);
