@@ -133,7 +133,7 @@ class Node{
 	//Promise updated
 	updateFingerTable(foreignNode, index){
 		//Update the finger of some remote node
-		if(ID.inRightOpenBound(foreignNode.id, this.id, this.finger[index].node)){
+		if(ID.inRightOpenBound(foreignNode.id, this.id, this.finger[index].node.id)){
 			this.finger[index].node = foreignNode;
 			return this.getPredecessor()
 				.then(
