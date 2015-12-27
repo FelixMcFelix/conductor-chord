@@ -90,7 +90,7 @@ class Node{
 					let proms = [];
 
 					for(var i=0; i<this.finger.length-1; i++) {
-						proms[proms.length-1].then(
+						Promise.all(proms).then(
 							(i) => {
 								if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
 									this.finger[i+1].node = this.finger[i].node;
