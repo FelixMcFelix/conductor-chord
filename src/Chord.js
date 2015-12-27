@@ -130,13 +130,16 @@ class ConductorChord {
 					// 	data: JSON.stringify({msg: "Hello!"})
 					// }))
 
-					this.node.stableJoin(srvNode)
+					this.node.initOn(srvNode)
 						.then(
-							x => {return srvNode.getSuccessor()}
-						)
-						.then(
-							x => u.log(this, x)
-						)
+							() => console.log(this)
+						);
+						// .then(
+						// 	x => {return srvNode.getSuccessor()}
+						// )
+						// .then(
+						// 	x => u.log(this, x)
+						// )
 
 				},
 				reason => u.log(this, reason)

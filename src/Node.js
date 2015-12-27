@@ -90,20 +90,22 @@ class Node{
 					let proms = [];
 
 					for(var i=0; i<this.finger.length-1; i++) {
-						if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
-							this.finger[i+1].node = this.finger[i].node;
-						else {
-							(i=>{
-								proms.push(
-									knownNode.findSuccessor(this.finger[i+1].start)
-										.then(
-											succ => {
-												this.finger[i+1].node = succ;
-											}
-										)
-								)
-							})(i)
-						}
+						proms[proms.length-1].then(
+							(i) => {
+								if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
+									this.finger[i+1].node = this.finger[i].node;
+								else {
+									proms.push(
+										knownNode.findSuccessor(this.finger[i+1].start)
+											.then(
+												succ => {
+													this.finger[i+1].node = succ;
+												}
+											)
+									)
+								}
+							}
+						);
 					}
 
 					return Promise.all(proms);
