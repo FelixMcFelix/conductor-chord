@@ -130,17 +130,29 @@ class ConductorChord {
 					// 	data: JSON.stringify({msg: "Hello!"})
 					// }))
 
-					this.node.initOn(srvNode)
-						.then(
-							() => console.log(this)
-						);
+					//this.node.initOn(srvNode)
+					//	.then(
+					//		() => console.log(this)
+					//	);
 						// .then(
 						// 	x => {return srvNode.getSuccessor()}
 						// )
 						// .then(
 						// 	x => u.log(this, x)
 						// )
-
+					this.node.stableJoin(srvNode)
+						.then(
+							() => {return this.node.stabilize()}
+						)
+						.then(
+							() => {return srvNode.unlinkClient()}
+						)
+						.then(
+							() => {
+								setInterval(this.node.stabilize.bind(this.node), 1000);
+								setInterval(this.node.fixFingers.bind(this.node), 666);
+							}
+						)
 				},
 				reason => u.log(this, reason)
 				);

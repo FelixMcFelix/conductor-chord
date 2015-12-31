@@ -116,6 +116,10 @@ class RemoteNode {
 		}
 	}
 
+	unlinkClient(idString){
+		return this.chord.rcm.call(this.id, "unlinkClient", [idString]);
+	}
+
 	//Item management
 
 	lookup(id){

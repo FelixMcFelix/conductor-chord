@@ -87,6 +87,12 @@ class RemoteCallModule {
 				break;
 			case "message":
 				break;
+			case "unlinkClient":
+				this.answer(message.returnID,
+					message.reqID,
+					this.chord.node.unlinkClient(message.params[0])
+				);
+				break;
 			case "lookup":
 				break;
 			case "add":

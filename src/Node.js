@@ -90,22 +90,25 @@ class Node{
 					let proms = [];
 
 					for(var i=0; i<this.finger.length-1; i++) {
-						Promise.all(proms).then(
-							(i) => {
-								if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id))
-									this.finger[i+1].node = this.finger[i].node;
-								else {
-									proms.push(
-										knownNode.findSuccessor(this.finger[i+1].start)
-											.then(
-												succ => {
-													this.finger[i+1].node = succ;
-												}
-											)
-									)
-								}
-							}
-						);
+						let p = (proms.length===0) ? Promise.resolve() : proms[proms.length-1],
+							f = ((i)=>{
+								return () => {
+									if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id)){
+										this.finger[i+1].node = this.finger[i].node;
+									} else {
+										console.log(`Using new unknown node.`)
+										proms.push(
+											knownNode.findSuccessor(this.finger[i+1].start)
+												.then(
+													succ => {
+														this.finger[i+1].node = succ;
+													}
+												)
+										)
+									}
+								};
+							})(i);
+						p.then(f);
 					}
 
 					return Promise.all(proms);
@@ -268,6 +271,15 @@ class Node{
 					node => node.message(id, msg)
 				)
 		}
+	}
+
+	unlinkClient(idString){
+		if(this.chord.config.isServer && this.chord.externalNodes[idString]){
+			delete this.chord.externalNodes[idString];
+			return true;
+		}
+
+		return false;
 	}
 
 	// Item management
