@@ -142,13 +142,16 @@ class ConductorChord {
 						// )
 					this.node.stableJoin(srvNode)
 						.then(
-							() => {return this.node.stabilize()}
-						)
-						.then(
-							() => {return srvNode.unlinkClient()}
+							() => {return this.node.stabilize();}
 						)
 						.then(
 							() => {
+								return srvNode.unlinkClient();
+							}
+						)
+						.then(
+							() => {
+								this.server.connect = false;
 								setInterval(this.node.stabilize.bind(this.node), 1000);
 								setInterval(this.node.fixFingers.bind(this.node), 666);
 							}
