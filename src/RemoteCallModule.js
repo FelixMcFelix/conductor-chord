@@ -80,7 +80,7 @@ class RemoteCallModule {
 					);
 				break;
 			case "notify":
-				this.chord.node.updateFingerTable(new RemoteNode(this.chord, new ID(message.params[0]), null))
+				this.chord.node.notify(new RemoteNode(this.chord, new ID(message.params[0]), null))
 					.then(
 						result => this.answer(message.returnID, message.reqID, null)
 					);
