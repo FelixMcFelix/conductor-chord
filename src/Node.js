@@ -204,9 +204,14 @@ class Node{
 	stableJoin(knownNode){
 		return this.setPredecessor(null)
 			.then(
-				res => {
-					this.setSuccessor(knownNode);
+				() => {
 					this.chord.server.connect = true;
+					knownNode.findSuccessor(this.id);
+				}
+			)
+			.then(
+				res => {
+					return this.setSuccessor(res);
 				}
 			);
 	}
