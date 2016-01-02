@@ -96,6 +96,8 @@ class ConductorChord {
 		if(this.config.isServer){
 			u.log(this, "Initialising server backing channel.");
 			this.conductor.register(new BootstrapChannelServer(this));
+			setInterval(this.node.stabilize.bind(this.node), 1000);
+			setInterval(this.node.fixFingers.bind(this.node), 666);
 		}
 
 		//space to store, well, external nodes - if you're a server, for instance.
