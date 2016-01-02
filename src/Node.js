@@ -206,7 +206,7 @@ class Node{
 			.then(
 				() => {
 					this.chord.server.connect = true;
-					knownNode.findSuccessor(this.id);
+					return knownNode.findSuccessor(this.id);
 				}
 			)
 			.then(
