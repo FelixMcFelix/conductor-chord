@@ -3,6 +3,9 @@
 class ChordSignalChannel{
 	constructor(chord){
 		//TODO
+		this.id =  "chord-signal";
+
+		chord.registerModule(this);
 	}
 
 	//Must implement:
@@ -42,10 +45,6 @@ class ChordSignalChannel{
 	//
 	// ChordMessageHandler
 	//
-
-	get id(){
-		return "chord-signal";
-	}
 
 	delegate(handler, message){
 
