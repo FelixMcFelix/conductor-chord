@@ -36,7 +36,7 @@ class RemoteCallModule {
 			case "getSuccessor":
 				this.chord.node.getSuccessor()
 					.then(
-						result => this.answer(message.returnID, message.reqID, result.id.idString)
+						result => this.answer(message.returnID, message.reqID, (result) ? result.id.idString : result)
 					);
 				break;
 			case "setSuccessor":
@@ -48,7 +48,7 @@ class RemoteCallModule {
 			case "getPredecessor":
 				this.chord.node.getPredecessor()
 					.then(
-						result => this.answer(message.returnID, message.reqID, result.id.idString)
+						result => this.answer(message.returnID, message.reqID, (result) ? result.id.idString : result)
 					);
 				break;
 			case "setPredecessor":
