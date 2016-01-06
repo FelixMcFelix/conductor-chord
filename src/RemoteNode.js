@@ -99,16 +99,12 @@ class RemoteNode {
 			this.connection.send(JSON.stringify({id, data: msg}));
 		else {
 			console.log("Creating new connection - none found or not open.")
-			this.chord.conductor.connectTo(id)
-				.then(result => {
-					this.connection = result;
 
-					result.on("message", msg => {
-						let parsy = JSON.parse(msg.data)
-						this.chord.message(parsy.id, parsy.data)
-					});
+			//TODO revisit how this is handled - add connection to this node? What else??
 
-					this.message(id, msg);
+			this.chord.smartConnectToNode(this.id, this)
+				.then(node => {
+					node.message(id, msg);
 				},
 				reason => {
 					console.log("Failed to create new connection to remote node.")

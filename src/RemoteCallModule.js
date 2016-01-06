@@ -11,6 +11,8 @@ class RemoteCallModule {
 
 		this.reqID = 0;
 		this.requestSpace = {};
+
+		chord.registerModule(this.rcm);
 	}
 
 	call(id, method, params){

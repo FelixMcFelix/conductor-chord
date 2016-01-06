@@ -279,8 +279,8 @@ class Node{
 	}
 
 	unlinkClient(idString){
-		if(this.chord.config.isServer && this.chord.externalNodes[idString]){
-			delete this.chord.externalNodes[idString];
+		if(this.chord.config.isServer && this.chord.directNodes[idString]){
+			delete this.chord.directNodes[idString];
 			return true;
 		}
 

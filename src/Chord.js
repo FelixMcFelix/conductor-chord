@@ -68,7 +68,12 @@ class ConductorChord {
 		this.addItem(this.id.idString, this.pubKeyPem);
 		u.log(this, "Added.");
 
+		//Create a module registry, register the RPC default module.
+		this.registry = new ModuleRegistry();
+		this.rcm = new RemoteCallModule(this);
+
 		//Prepare the standard connection channel and an instance of Conductor:
+		//(SignalChannel registers itself to the module registry)
 		u.log(this, "Creating standard channel and conductor.");
 		this.config.conductorConfig.channel = new ChordSignalChannel(this);
 		this.conductor = Conductor.create(this.config.conductorConfig);
@@ -83,14 +88,9 @@ class ConductorChord {
 					let parsy = JSON.parse(msg.data);
 					this.message(parsy.id, parsy.data)
 				};
-				this.externalNodes[conn.id] = new RemoteNode(this, new ID(conn.id), conn)
+				this.directNodes[conn.id] = new RemoteNode(this, new ID(conn.id), conn)
 			}
 		};
-
-		//Create a module registry, register the RPC default module.
-		this.registry = new ModuleRegistry();
-		this.rcm = new RemoteCallModule(this);
-		this.registerModule(this.rcm);
 
 		//If this node is actually a server, load a background channel which will mediate requests to join the network.
 		if(this.config.isServer){
@@ -101,19 +101,63 @@ class ConductorChord {
 		}
 
 		//space to store, well, external nodes - if you're a server, for instance.
-		this.externalNodes = {};
+		//This is also used for resource management and ring bypass.
+		this.directNodes = {};
 		this.server = {
 			connect: false,
-			node: null
+			node: null,
+			address: null
 		};
+	}
+
+	smartConnectToNode(id, optNode) {
+		if (Object.getOwnPropertyNames(this.directNodes).length === 0) {
+			return this.join(this.server.address)
+				.then( () => {
+					return this.nodeOverRing(id, optNode);
+				} );
+		} else if (this.directNodes[ID.coerceString(id)]) {
+			return Promise.resolve(this.directNodes[ID.coerceString(id)]);
+		} else {
+			return this.nodeOverRing(id, optNode);
+		}
+	}
+
+	nodeOverRing(id, optNode){
+		let saneId = ID.coerceString(id);
+
+		return new Promise( (resolve, reject) => {
+			this.conductor.connectTo(saneId, "Conductor-Chord")
+				.then( conn => {
+					let node;
+
+					if (optNode) {
+						node = optNode;
+						node.connection = conn;
+					} else {
+						node = new RemoteNode(this, saneId, conn);
+					}
+
+					conn.on("message", msg => {
+						let parsy = JSON.parse(msg.data);
+						this.message(parsy.id, parsy.data);
+					});
+
+					this.directNodes[saneId] = node;
+
+					resolve(node);
+				} )
+				.catch( reason => reject(reason) );
+		} );
 	}
 
 	join(addr){
 		u.log(this, "Joining "+addr);
 
 		let chan = new BootstrapChannelClient(addr, this);
+		this.server.address = null;
 
-		this.conductor.connectTo(this.id.idString, chan)
+		return this.conductor.connectTo(this.id.idString, chan)
 			.then(
 				result =>{
 					u.log(this, result);
@@ -125,24 +169,9 @@ class ConductorChord {
 					let srvNode = new RemoteNode(this, new ID(result.id), result);
 
 					this.server.node = srvNode;
+					this.directNodes[result.id] = srvNode;
 
-					//Test chain of message handlers.
-					// result.send(JSON.stringify({
-					// 	id: result.id,
-					// 	data: JSON.stringify({msg: "Hello!"})
-					// }))
-
-					//this.node.initOn(srvNode)
-					//	.then(
-					//		() => console.log(this)
-					//	);
-						// .then(
-						// 	x => {return srvNode.getSuccessor()}
-						// )
-						// .then(
-						// 	x => u.log(this, x)
-						// )
-					this.node.stableJoin(srvNode)
+					return this.node.stableJoin(srvNode)
 						.then(
 							() => {return this.node.stabilize();}
 						)
@@ -186,8 +215,8 @@ class ConductorChord {
 	message(id, msg){
 		console.log(`Received message at the chord for ${ID.coerceString(id)}: ${msg}`);
 
-		if(this.externalNodes[ID.coerceString(id)])
-			this.externalNodes[ID.coerceString(id)].message(id, msg);
+		if(this.directNodes[ID.coerceString(id)])
+			this.directNodes[ID.coerceString(id)].message(id, msg);
 		else
 			this.node.message(id, msg);
 	}

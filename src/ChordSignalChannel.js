@@ -5,6 +5,14 @@ class ChordSignalChannel{
 		//TODO
 	}
 
+	//Must implement:
+	// 1) ConnectionVector
+	// 2) ChordMessageHandler
+
+	//
+	// ConnectionVector
+	//
+
 	get internalID(){
 		return "Conductor-Chord";
 	}
@@ -29,6 +37,18 @@ class ChordSignalChannel{
 
 	close(){
 		//TODO
+	}
+
+	//
+	// ChordMessageHandler
+	//
+
+	get id(){
+		return "chord-signal";
+	}
+
+	delegate(handler, message){
+
 	}
 }
 
