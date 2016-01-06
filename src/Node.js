@@ -222,24 +222,45 @@ class Node{
 	stabilize(){
 		let oSucc;
 
+		u.log(this.chord, `ME:`);
+		u.log(this.chord, this);
+
 		return this.getSuccessor()
-			.then(succ => {oSucc = succ; return succ.getPredecessor()})
+			.then(succ => {
+				oSucc = succ;
+				u.log(this.chord, `MY SUCCESSOR:`);
+				u.log(this.chord, succ);
+				return succ.getPredecessor();
+			})
 			.then(pred => {
-				if(ID.inOpenBound(pred.id, this.id, oSucc.id))
+				u.log(this.chord, `MY SUCCESSOR'S PREDECESSOR:`);
+				u.log(this.chord, pred);
+
+				if(ID.inOpenBound(pred.id, this.id, oSucc.id)) {
+					u.log(this.chord, `NEW SUCCESSOR FOUND`);
 					return this.setSuccessor(pred);
-				else
+				} else {
 					return Promise.resolve();
+				}
 			})
 			.then(
-				res => {return oSucc.notify(this);}
+				res => {
+					u.log(this.chord, `NOTIFYING SUCCESSOR ABOUT:`);
+					u.log(this.chord, this.id.idString);
+					return oSucc.notify(this);
+				}
 			)
 
 	}
 
 	//Promise updated
 	notify(nPrime){
+		u.log(this.chord, `NOTIFIED BY:`);
+		u.log(this.chord, nPrime);
+
 		if(this.predecessor === null || ID.inOpenBound(nPrime.id, this.predecessor.id, this.id))
 			this.predecessor = nPrime;
+		
 		return Promise.resolve();
 	}
 
