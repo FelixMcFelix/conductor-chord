@@ -266,6 +266,11 @@ class Node{
 
 		if(this.chord.server.connect && ID.compare(id, this.id)!== 0) {
 			this.chord.server.node.message(id, msg);
+		} else if (!this.predecessor && ID.compare(id, this.id)!== 0 ) {
+			this.getSuccessor()
+				.then(
+					successor => successor.message(id, msg)
+				)
 		} else if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);

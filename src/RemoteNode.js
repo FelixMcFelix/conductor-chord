@@ -98,9 +98,7 @@ class RemoteNode {
 			)
 			this.connection.send(JSON.stringify({id, data: msg}));
 		else {
-			console.log("Creating new connection - none found or not open.")
-
-			//TODO revisit how this is handled - add connection to this node? What else??
+			console.log("Creating new connection - none found or not open.");
 
 			this.chord.smartConnectToNode(this.id, this)
 				.then(node => {
