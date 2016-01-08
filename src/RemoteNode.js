@@ -17,7 +17,7 @@ class RemoteNode {
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "getSuccessor", [])
-				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
+				.then(result => resolve((result)? new RemoteNode(this.chord, new ID(result), null) : result),
 					reason => reject(reason)
 				);
 		});
@@ -37,7 +37,7 @@ class RemoteNode {
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "getPredecessor", [])
-				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
+				.then(result => resolve((result)? new RemoteNode(this.chord, new ID(result), null) : result),
 					reason => reject(reason)
 				);
 		});

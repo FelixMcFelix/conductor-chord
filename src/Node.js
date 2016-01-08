@@ -26,7 +26,8 @@ class Node{
 		//Improvement over std chord.
 		do {
 			this.finger[index++].node = node;
-		} while(ID.inRightOpenBound(node.id, this.finger[index].start, this.finger[index].node.id));
+		} while(index<this.finger.length
+			&& ID.inRightOpenBound(node.id, this.finger[index].start, this.finger[index].node.id));
 	}
 
 	removeFinger(id){
