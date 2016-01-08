@@ -108,6 +108,9 @@ class ConductorChord {
 			node: null,
 			address: null
 		};
+
+		if(this.config.debug)
+			window.chorddebug = this;
 	}
 
 	smartConnectToNode(id, optNode) {

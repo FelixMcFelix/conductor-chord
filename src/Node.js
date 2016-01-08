@@ -21,6 +21,36 @@ class Node{
 	//These show the algorithms, but they do not account for RPC, promises, callbacks etc...
 	//Redo these as time goes on.
 
+	setFinger(index, node){
+		//Set the node, and then check further indices to see if this node is a better fit.
+		//Improvement over std chord.
+		do {
+			this.finger[index++].node = node;
+		} while(ID.inRightOpenBound(node.id, this.finger[index.start], this.finger[index].node.id));
+	}
+
+	removeFinger(id){
+		//Scan right to left for a block of fingers represented by this id.
+		//Replace them all with the node found immediately to the right of the block.
+		//If last element was removed, replace with self.
+		//Improvement over std chord.
+
+		let index = this.finger.length - 1,
+			replace;
+
+		while(index >=0){
+			replace = (index === this.finger.length-1) ? this : this.finger[index+1].node;
+
+			while(index >=0 && ID.compare(id, this.finger[index].node.id) === 0){
+				this.finger[index].node = replace;
+
+				index--;
+			}
+
+			index--;
+		}
+	}
+
 	//Promise updated
 	getSuccessor(){
 		return new Promise((resolve, reject) => {
@@ -223,18 +253,18 @@ class Node{
 		let oSucc;
 
 		u.log(this.chord, `ME:`);
-		u.log(this.chord, this);
+		u.log(this.chord, this.id.idString);
 
 		return this.getSuccessor()
 			.then(succ => {
 				oSucc = succ;
 				u.log(this.chord, `MY SUCCESSOR:`);
-				u.log(this.chord, succ);
+				u.log(this.chord, succ.id.idString);
 				return succ.getPredecessor();
 			})
 			.then(pred => {
 				u.log(this.chord, `MY SUCCESSOR'S PREDECESSOR:`);
-				u.log(this.chord, pred);
+				u.log(this.chord, (pred) ? pred.id.idString : pred);
 
 				if(ID.inOpenBound(pred.id, this.id, oSucc.id)) {
 					u.log(this.chord, `NEW SUCCESSOR FOUND`);
@@ -260,7 +290,7 @@ class Node{
 
 		if(this.predecessor === null || ID.inOpenBound(nPrime.id, this.predecessor.id, this.id))
 			this.predecessor = nPrime;
-		
+
 		return Promise.resolve();
 	}
 
