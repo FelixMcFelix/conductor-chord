@@ -110,10 +110,11 @@ class ConductorChord {
 		};
 
 		if(this.config.debug) {
-			if(window)
+			try {
 				window.chorddebug = this;
-			else
+			} catch (e) {
 				global.chorddebug = this;
+			}
 		}
 	}
 
