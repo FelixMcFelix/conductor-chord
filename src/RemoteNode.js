@@ -102,7 +102,7 @@ class RemoteNode {
 
 			this.chord.smartConnectToNode(this.id, this)
 				.then(node => {
-					node.message(id, msg);
+					this.chord.message(id, msg);
 				},
 				reason => {
 					console.log("Failed to create new connection to remote node.")
