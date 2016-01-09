@@ -151,6 +151,12 @@ class ConductorChord {
 						this.message(parsy.id, parsy.data);
 					});
 
+					conn.ondisconnect = evt => {
+						this.node.removeFinger(conn.id);
+						if(this.directNodes[conn.id])
+							delete this.directNodes[conn.id];
+					};
+
 					this.directNodes[saneId] = node;
 
 					resolve(node);
@@ -173,6 +179,12 @@ class ConductorChord {
 						let parsy = JSON.parse(msg.data);
 						this.message(parsy.id, parsy.data);
 					});
+
+					result.ondisconnect = evt => {
+						this.node.removeFinger(conn.id);
+						if(this.directNodes[conn.id])
+							delete this.directNodes[conn.id];
+					};
 
 					let srvNode = new RemoteNode(this, new ID(result.id), result);
 
