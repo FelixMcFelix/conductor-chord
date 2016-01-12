@@ -143,7 +143,7 @@ class ConductorChord {
 						node = optNode;
 						node.connection = conn;
 					} else {
-						node = new RemoteNode(this, saneId, conn);
+						node = new RemoteNode(this, new ID(conn.id), conn);
 					}
 
 					conn.on("message", msg => {
@@ -157,7 +157,12 @@ class ConductorChord {
 							delete this.directNodes[conn.id];
 					};
 
-					this.directNodes[saneId] = node;
+					this.directNodes[conn.id] = node;
+
+					if(ID.compare(conn.id, node.id) !== 0){
+						delete this.directNodes[ID.coerceString(node.id)];
+						node.id = new ID(conn.id)
+					}
 
 					resolve(node);
 				} )
