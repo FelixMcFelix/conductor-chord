@@ -35,7 +35,6 @@ class ChordSignalChannel{
 	// Standard setup from here on out - trade encrypted SDP and ICE.
 
 	onbind(){
-		//TODO
 	}
 
 	send(id,type,data){
@@ -85,7 +84,6 @@ class ChordSignalChannel{
 	}
 
 	close(){
-		//TODO
 	}
 
 	//
@@ -200,8 +198,9 @@ class ChordSignalChannel{
 		let entry = this.finishEntry(message.id, message.pub, message.origID);
 		try {
 			this.chord.renameConnection(message.origID, message.id);
+		} finally {
+			this.clearActionQueue(entry);
 		}
-		this.clearActionQueue(entry);
 	}
 
 	//
