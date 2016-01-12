@@ -2,7 +2,8 @@
 
 const ModuleRegistry = require("./ModuleRegistry.js"),
 	msg_types = require("webrtc-conductor").enums,
-	pki = require("node-forge").pki;
+	pki = require("node-forge").pki,
+	u = require("./UtilFunctions.js");
 
 //handshake status codes.
 const HSHAKE_UNKNOWN = 0,
@@ -38,9 +39,12 @@ class ChordSignalChannel{
 	}
 
 	send(id,type,data){
+		u.log(this.chord, "Queueing command from conductor to send over chord:");
+		u.log(this.chord, type);
 		switch(type){
 			//All of these calls RELY on an accurate key exchange beforehand.
 			//These interactiona are queued.
+
 			case msg_types.MSG_SDP_OFFER:
 				this.queueOrPerformActionOn(id, id => {this.sendSDP(id, "offer", data)} );
 				break;
@@ -60,20 +64,30 @@ class ChordSignalChannel{
 				id: null
 			};
 
+		u.log(this.chord, `Response requested at conductor via chord:`);
+
 		switch(msg.type){
 			case "sdp-offer":
+				u.log(this.chord, `SDP offer from ${out.id}`);
+
 				out.type = msg_types.RESPONSE_SDP_OFFER;
 				out.data = msg.sdp;
 				break;
 			case "sdp-answer":
+				u.log(this.chord, `SDP answer from ${out.id}`);
+
 				out.type = msg_types.RESPONSE_SDP_ANSWER;
 				out.data = msg.sdp;
 				break;
 			case "ice":
+				u.log(this.chord, `ICE candidate from ${out.id}`);
+
 				out.type = msg_types.RESPONSE_ICE;
 				out.data = msg.ice;
 				break;
 			default:
+				u.log(this.chord, `Misc message from: ${out.id}`);
+
 				out.type = msg_types.RESPONSE_NONE;
 				break;
 		}
@@ -91,6 +105,8 @@ class ChordSignalChannel{
 	//
 
 	delegate(handler, message){
+		u.log(this.chord, "Received message at chord signal channel:");
+		u.log(this.chord, {handler, message});
 		switch(handler){
 			case "key-shake-init":
 				this.recvHandshakeInit(message);
@@ -147,6 +163,8 @@ class ChordSignalChannel{
 	}
 
 	clearActionQueue(entry){
+		u.log(this.chord, `Clearing action queue for ${entry.id}`);
+
 		while(entry.queue.length)
 			(entry.queue.shift())(entry.id);
 	}
@@ -179,6 +197,8 @@ class ChordSignalChannel{
 	//
 
 	initiateHandshake(id){
+		u.log(this.chord, `Initialising handshake with: ${id}`);
+
 		let entry = this.fetchOrCreateNodeEntry(id);
 
 		entry.status = HSHAKE_SENT;
@@ -188,6 +208,8 @@ class ChordSignalChannel{
 
 	recvHandshakeInit(message){
 		//Message has: id, destID, pub.
+		u.log(this.chord, `Received handshake from: ${message.id}`);
+
 		this.finishEntry(message.id, message.pub);
 
 		this.message(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem})
@@ -195,6 +217,8 @@ class ChordSignalChannel{
 
 	recvHandshakeReply(message){
 		//Message has: id, origID, pub.
+		u.log(this.chord, `Received handshake reply from ${message.origID}: true ID ${message.id}.`);
+
 		let entry = this.finishEntry(message.id, message.pub, message.origID);
 		try {
 			this.chord.renameConnection(message.origID, message.id);
