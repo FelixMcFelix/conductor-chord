@@ -186,9 +186,9 @@ class ConductorChord {
 					});
 
 					result.ondisconnect = evt => {
-						this.node.removeFinger(conn.id);
-						if(this.directNodes[conn.id])
-							delete this.directNodes[conn.id];
+						this.node.removeFinger(result.id);
+						if(this.directNodes[result.id])
+							delete this.directNodes[result.id];
 					};
 
 					let srvNode = new RemoteNode(this, new ID(result.id), result);
