@@ -1,6 +1,6 @@
 "use strict";
 
-const ModuleRegistry = require("ModuleRegistry.js"),
+const ModuleRegistry = require("./ModuleRegistry.js"),
 	msg_types = require("webrtc-conductor").enums,
 	pki = require("node-forge").pki;
 
