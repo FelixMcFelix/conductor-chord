@@ -271,7 +271,7 @@ class Node{
 				u.log(this.chord, `MY SUCCESSOR'S PREDECESSOR:`);
 				u.log(this.chord, (pred) ? pred.id.idString : pred);
 
-				if(ID.inOpenBound(pred.id, this.id, oSucc.id)) {
+				if(pred && ID.inOpenBound(pred.id, this.id, oSucc.id)) {
 					u.log(this.chord, `NEW SUCCESSOR FOUND`);
 					return this.setSuccessor(pred);
 				} else {
@@ -317,8 +317,8 @@ class Node{
 
 		// debugger;
 
-		console.log(`Received message at the local node for ${id}: ${msg}
-			I am ${this.id}`);
+		u.log(this.chord, `Received message at the local node for ${id}: ${msg}
+			I am ${this.id.idString}`);
 
 		if(this.chord.server.connect && ID.compare(id, this.id)!== 0) {
 			this.chord.server.node.message(id, msg);

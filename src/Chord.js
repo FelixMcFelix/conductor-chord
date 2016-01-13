@@ -125,9 +125,24 @@ class ConductorChord {
 					return this.nodeOverRing(id, optNode);
 				} );
 		} else if (this.directNodes[ID.coerceString(id)]) {
-			return Promise.resolve(this.directNodes[ID.coerceString(id)]);
+			let entry = this.directNodes[ID.coerceString(id)];
+
+			if(entry.connection)
+				return Promise.resolve(this.directNodes[ID.coerceString(id)]);
+			else
+				return this.nodeOverRing(id, optNode);
 		} else {
 			return this.nodeOverRing(id, optNode);
+		}
+	}
+
+	obtainRemoteNode(id){
+		let saneID = ID.coerceString(id);
+
+		if (this.directNodes[saneID]) {
+			return this.directNodes[saneID];
+		} else {
+			let node = new RemoteNode(this, new ID(saneID), null)
 		}
 	}
 

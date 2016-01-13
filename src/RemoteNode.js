@@ -17,7 +17,7 @@ class RemoteNode {
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "getSuccessor", [])
-				.then(result => resolve((result)? new RemoteNode(this.chord, new ID(result), null) : result),
+				.then(result => resolve((result)? this.chord.obtainRemoteNode(result) : result),
 					reason => reject(reason)
 				);
 		});
@@ -37,7 +37,7 @@ class RemoteNode {
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "getPredecessor", [])
-				.then(result => resolve((result)? new RemoteNode(this.chord, new ID(result), null) : result),
+				.then(result => resolve((result)? this.chord.obtainRemoteNode(result) : result),
 					reason => reject(reason)
 				);
 		});
@@ -60,7 +60,7 @@ class RemoteNode {
 	findSuccessor(id){
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "findSuccessor", [ID.coerceString(id)])
-				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
+				.then(result => resolve(this.chord.obtainRemoteNode(result)),
 					reason => reject(reason)
 				);
 		});
@@ -69,7 +69,7 @@ class RemoteNode {
 	findPredecessor(id){
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "findPredecessor", [ID.coerceString(id)])
-				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
+				.then(result => resolve(this.chord.obtainRemoteNode(result)),
 					reason => reject(reason)
 				);
 		});
@@ -78,7 +78,7 @@ class RemoteNode {
 	closestPrecedingFinger(id){
 		return new Promise((resolve, reject) => {
 			this.chord.rcm.call(this.id, "closestPrecedingFinger", [ID.coerceString(id)])
-				.then(result => resolve(new RemoteNode(this.chord, new ID(result), null)),
+				.then(result => resolve(this.chord.obtainRemoteNode(result)),
 					reason => reject(reason)
 				);
 		});
@@ -98,7 +98,7 @@ class RemoteNode {
 			)
 			this.connection.send(JSON.stringify({id, data: msg}));
 		else {
-			console.log("Creating new connection - none found or not open.");
+			console.log(`Creating new connection to ${id} - none found or not open.`);
 
 			this.chord.smartConnectToNode(this.id, this)
 				.then(node => {
