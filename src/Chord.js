@@ -139,7 +139,9 @@ class ConductorChord {
 	obtainRemoteNode(id){
 		let saneID = ID.coerceString(id);
 
-		if (this.directNodes[saneID]) {
+		if (saneID === this.id.idString) {
+			return this.node;
+		} else if (this.directNodes[saneID]) {
 			return this.directNodes[saneID];
 		} else {
 			let node = new RemoteNode(this, new ID(saneID), null)
@@ -229,7 +231,7 @@ class ConductorChord {
 						)
 				},
 				reason => u.log(this, reason)
-				);
+			);
 	}
 
 	addItem(key, value){
