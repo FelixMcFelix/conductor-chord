@@ -100,8 +100,12 @@ class RemoteCallModule {
 			case "add":
 				break;
 			case "answer":
-				this.requestSpace[message.reqID].resolve(message.result);
-				delete this.requestSpace[message.reqID];
+				if(message.returnID === this.chord.id.idString){
+					this.requestSpace[message.reqID].resolve(message.result);
+					delete this.requestSpace[message.reqID];
+				} else {
+					this.bypassAnswer(message);
+				}	
 				break;
 			case "error":
 				this.requestSpace[message.reqID].reject(message.reason);
@@ -114,11 +118,15 @@ class RemoteCallModule {
 	}
 
 	answer(returnID, reqID, result){
-		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "answer", {reqID, result}));
+		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "answer", {reqID, result, returnID, hops: 5}));
 	}
 
 	error(returnID, reqID, result){
-		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "error", {reqID, result}));
+		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "error", {reqID, result, returnID, hops: 10}));
+	}
+
+	bypassAnswer(answerObj){
+		this.chord.message(answerObj.returnID, ModuleRegistry.wrap(this.id, "answer", answerObj), true);
 	}
 }
 

@@ -260,13 +260,13 @@ class ConductorChord {
 		return this.node.lookup(id);
 	}
 
-	message(id, msg){
+	message(id, msg, bypass){
 		console.log(`Received message at the chord for ${ID.coerceString(id)}: ${msg}`);
 
 		if(this.directNodes[ID.coerceString(id)])
 			this.directNodes[ID.coerceString(id)].message(id, msg);
 		else
-			this.node.message(id, msg);
+			this.node.message(id, msg, bypass);
 	}
 
 	registerModule(module){

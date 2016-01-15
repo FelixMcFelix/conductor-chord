@@ -312,7 +312,7 @@ class Node{
 
 	//Custom
 	
-	message(id, msg){
+	message(id, msg, bypass){
 		//TODO
 
 		// debugger;
@@ -327,7 +327,7 @@ class Node{
 				.then(
 					successor => successor.message(id, msg)
 				)
-		} else if (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id)){
+		} else if (!bypass && (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id))){
 			//Pass to appropriate handler - this is our message.
 			this.chord.registry.parse(msg);
 		} else {
@@ -341,7 +341,7 @@ class Node{
 
 	unlinkClient(idString){
 		if(this.chord.config.isServer && this.chord.directNodes[idString]){
-			delete this.chord.directNodes[idString];
+			// delete this.chord.directNodes[idString];
 			return true;
 		}
 
