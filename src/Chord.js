@@ -88,7 +88,9 @@ class ConductorChord {
 					let parsy = JSON.parse(msg.data);
 					this.message(parsy.id, parsy.data)
 				};
-				this.directNodes[conn.id] = new RemoteNode(this, new ID(conn.id), conn)
+				let node = this.obtainRemoteNode(conn.id);
+				node.connection = conn; 
+				this.directNodes[conn.id] = node;
 			}
 		};
 
@@ -103,6 +105,7 @@ class ConductorChord {
 		//space to store, well, external nodes - if you're a server, for instance.
 		//This is also used for resource management and ring bypass.
 		this.directNodes = {};
+		this.knownNodes = {}; // nodes w/o connections
 		this.server = {
 			connect: false,
 			node: null,
@@ -144,7 +147,9 @@ class ConductorChord {
 		} else if (this.directNodes[saneID]) {
 			return this.directNodes[saneID];
 		} else {
-			let node = new RemoteNode(this, new ID(saneID), null)
+			let node = new RemoteNode(this, new ID(saneID), null);
+			this.knownNodes[saneID] = node;
+			return node;
 		}
 	}
 
@@ -158,10 +163,10 @@ class ConductorChord {
 
 					if (optNode) {
 						node = optNode;
-						node.connection = conn;
 					} else {
-						node = new RemoteNode(this, new ID(conn.id), conn);
+						node = this.obtainRemoteNode(conn.id);
 					}
+					node.connection = conn;
 
 					conn.on("message", msg => {
 						let parsy = JSON.parse(msg.data);
@@ -212,6 +217,7 @@ class ConductorChord {
 
 					this.server.node = srvNode;
 					this.directNodes[result.id] = srvNode;
+					this.knownNodes[result.id] = srvNode;
 
 					return this.node.stableJoin(srvNode)
 						.then(
@@ -231,7 +237,7 @@ class ConductorChord {
 						)
 				},
 				reason => u.log(this, reason)
-			);
+				);
 	}
 
 	addItem(key, value){

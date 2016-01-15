@@ -1,6 +1,7 @@
 "use strict";
 
 const ModuleRegistry = require("./ModuleRegistry.js"),
+	ID = require("./ID.js"),
 	msg_types = require("webrtc-conductor").enums,
 	pki = require("node-forge").pki,
 	u = require("./UtilFunctions.js");
@@ -266,7 +267,7 @@ class ChordSignalChannel{
 	// Helpers
 	//
 	message(id, handler, msg){
-		this.chord.message(id, ModuleRegistry.wrap(this, handler, msg));
+		this.chord.message(id, ModuleRegistry.wrap(this.id, handler, msg));
 	}
 }
 
