@@ -91,11 +91,7 @@ class RemoteNode {
 	//Custom
 
 	message(id, msg){
-		if(this.connection
-			&& this.connection.connection
-			&& (this.connection.connection.iceConnectionState === "connected"
-			|| this.connection.connection.iceConnectionState === "completed")
-			)
+		if(this.isConnected())
 			this.connection.send(JSON.stringify({id, data: msg}));
 		else {
 			console.log(`Creating new connection to ${id} - none found or not open.`);
@@ -108,6 +104,13 @@ class RemoteNode {
 					console.log("Failed to create new connection to remote node.")
 				});
 		}
+	}
+
+	isConmnected() {
+		return this.connection
+			&& this.connection.connection
+			&& (this.connection.connection.iceConnectionState === "connected"
+			|| this.connection.connection.iceConnectionState === "completed");
 	}
 
 	unlinkClient(idString){
