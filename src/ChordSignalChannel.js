@@ -350,7 +350,7 @@ class ChordSignalChannel{
 		}
 
 		chosen.message(ID.coerceString(chosen.id), ModuleRegistry.wrap(this.id, "proxy", {
-			data: {m: this.id, h: handler, o: msg),
+			data: {m: this.id, h: handler, o: msg},
 			dest: ID.coerceString(id),
 			src: ID.coerceString(this.chord.id)
 		}))
