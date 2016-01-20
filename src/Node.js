@@ -249,7 +249,7 @@ class Node{
 			.then(
 				foundSucc => {
 					succ = foundSucc;
-					return nodeOverRing(ID.coerceString(succ.id), succ);
+					return this.chord.nodeOverRing(ID.coerceString(succ.id), succ);
 				}
 			)
 			.then(
