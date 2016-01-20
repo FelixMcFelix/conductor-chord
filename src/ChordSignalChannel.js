@@ -108,6 +108,9 @@ class ChordSignalChannel{
 	delegate(handler, message){
 		u.log(this.chord, "Received message at chord signal channel:");
 		u.log(this.chord, {handler, message});
+
+		message.type = handler;
+
 		switch(handler){
 			case "key-shake-init":
 				this.recvHandshakeInit(message);
