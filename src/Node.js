@@ -279,6 +279,11 @@ class Node{
 				u.log(this.chord, `MY SUCCESSOR'S PREDECESSOR:`);
 				u.log(this.chord, (pred) ? pred.id.idString : pred);
 
+				u.log(this.chord, `x: ${ID.coerceString(pred.id)}`);
+				u.log(this.chord, `LB: ${ID.coerceString(this.id)}`);
+				u.log(this.chord, `UB: ${ID.coerceString(oSucc.id)}`);
+				u.log(this.chord, `x in (UB, LB): ${ID.inOpenBound(pred.id, this.id, oSucc.id)}`);
+
 				if(pred && ID.inOpenBound(pred.id, this.id, oSucc.id)) {
 					u.log(this.chord, `NEW SUCCESSOR FOUND`);
 					oSucc = pred;
