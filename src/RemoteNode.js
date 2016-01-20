@@ -106,7 +106,7 @@ class RemoteNode {
 		}
 	}
 
-	isConmnected() {
+	isConnected() {
 		return this.connection
 			&& this.connection.connection
 			&& (this.connection.connection.iceConnectionState === "connected"
