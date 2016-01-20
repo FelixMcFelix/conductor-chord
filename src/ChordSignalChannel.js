@@ -228,7 +228,7 @@ class ChordSignalChannel{
 
 		let entry = this.finishEntry(message.id, message.pub, message.origID);
 		try {
-			this.chord.renameConnection(message.origID, message.id);
+			this.chord.conductor.renameConnection(message.origID, message.id);
 		} finally {
 			this.clearActionQueue(entry);
 		}
