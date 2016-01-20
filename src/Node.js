@@ -253,8 +253,9 @@ class Node{
 				}
 			)
 			.then(
-				res => {
-					return this.setSuccessor(res);
+				conn => {
+					succ.connection = conn;
+					return this.setSuccessor(succ);
 				}
 			);
 	}
