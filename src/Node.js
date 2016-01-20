@@ -237,11 +237,19 @@ class Node{
 	//Stabilization methods
 	//Promise updated
 	stableJoin(knownNode){
+		let succ;
+
 		return this.setPredecessor(null)
 			.then(
 				() => {
 					this.chord.server.connect = true;
 					return knownNode.findSuccessor(this.id);
+				}
+			)
+			.then(
+				foundSucc => {
+					succ = foundSucc;
+					return this.chord.conductor.connectTo(ID.coerceString(succ.id), "Conductor-Chord");
 				}
 			)
 			.then(
