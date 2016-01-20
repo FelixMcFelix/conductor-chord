@@ -249,7 +249,7 @@ class Node{
 			.then(
 				foundSucc => {
 					succ = foundSucc;
-					return this.chord.conductor.connectTo(ID.coerceString(succ.id), "Conductor-Chord");
+					return nodeOverRing(ID.coerceString(succ.id), succ);
 				}
 			)
 			.then(
