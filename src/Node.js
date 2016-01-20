@@ -254,7 +254,6 @@ class Node{
 			)
 			.then(
 				conn => {
-					succ.connection = conn;
 					return this.setSuccessor(succ);
 				}
 			);

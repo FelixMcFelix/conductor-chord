@@ -130,7 +130,7 @@ class ConductorChord {
 		} else if (this.directNodes[ID.coerceString(id)]) {
 			let entry = this.directNodes[ID.coerceString(id)];
 
-			if(entry.connection)
+			if(entry.isConnected())
 				return Promise.resolve(this.directNodes[ID.coerceString(id)]);
 			else
 				return this.nodeOverRing(id, optNode);
