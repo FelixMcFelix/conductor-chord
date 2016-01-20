@@ -123,7 +123,10 @@ class ChordSignalChannel{
 				break;
 			case "ice":
 				this.recvICE(message);
-				break
+				break;
+			case "proxy":
+				this.handleProxyReq(message);
+				break;
 		}
 	}
 
@@ -204,7 +207,8 @@ class ChordSignalChannel{
 
 		entry.status = HSHAKE_SENT;
 
-		this.message(id, "key-shake-init", {id: ID.coerceString(this.chord.id), destID:id, pub: this.chord.pubKeyPem});
+		// this.message(id, "key-shake-init", {id: ID.coerceString(this.chord.id), destID:id, pub: this.chord.pubKeyPem});
+		this.proxy(id, "key-shake-init", {id: ID.coerceString(this.chord.id), destID:id, pub: this.chord.pubKeyPem});
 	}
 
 	recvHandshakeInit(message){
@@ -212,8 +216,10 @@ class ChordSignalChannel{
 		u.log(this.chord, `Received handshake from: ${message.id}`);
 
 		this.finishEntry(message.id, message.pub);
+		this.updateProxy(message.id, message.proxy);
 
-		this.message(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem})
+		// this.message(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem})
+		this.proxy(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem});
 	}
 
 	recvHandshakeReply(message){
@@ -234,16 +240,20 @@ class ChordSignalChannel{
 
 	sendSDP(id, type, msg){
 		//TODO: encrypt
-		this.message(id, "sdp-"+type, {id: ID.coerceString(this.chord.id), sdp: msg});
+		// this.message(id, "sdp-"+type, {id: ID.coerceString(this.chord.id), sdp: msg});
+		this.proxy(id, "sdp-"+type, {id: ID.coerceString(this.chord.id), sdp: msg});
 	}
 
 	sendICE(id, msg){
 		//TODO: encrypt
-		this.message(id, "ice", {id: ID.coerceString(this.chord.id), ice: msg})
+		// this.message(id, "ice", {id: ID.coerceString(this.chord.id), ice: msg})
+		this.proxy(id, "ice", {id: ID.coerceString(this.chord.id), ice: msg})
 	}
 
 	recvSDPOffer(message){
 		//Message has: id, sdp
+
+		this.updateProxy(message.id, message.proxy)
 
 		//TODO: decrypt
 		this.chord.conductor.response(this, message);
@@ -252,12 +262,16 @@ class ChordSignalChannel{
 	recvSDPAnswer(message){
 		//Message has: id, sdp
 
+		this.updateProxy(message.id, message.proxy)
+
 		//TODO: decrypt
 		this.chord.conductor.response(this, message);
 	}
 
-	recvICE(message){
+	recvICE(message) {
 		//Message has: id, ice
+
+		this.updateProxy(message.id, message.proxy)
 
 		//TODO: decrypt
 		this.chord.conductor.response(this, message);
@@ -266,8 +280,80 @@ class ChordSignalChannel{
 	//
 	// Helpers
 	//
-	message(id, handler, msg){
+	message(id, handler, msg) {
 		this.chord.message(id, ModuleRegistry.wrap(this.id, handler, msg));
+	}
+
+	handleProxyReq(msg) {
+		msg.data.o.proxy = ID.coerceString(this.chord.id);
+
+		this.chord.message(msg.dest, JSON.stringify(msg.data));
+	}
+
+	proxy(id, handler, msg){
+		let successor = this.chord.node.finger[0].node,
+			predecessor = this.chord.node.predecessor;
+
+		if( successor
+			&& (typeof successor == "RemoteNode")
+			&& successor.isConnected()
+			&& predecessor
+			&& (typeof predecessor == "RemoteNode")
+			&& predecessor.isConnected() )
+			this.proxyByRing(id, handler, msg);
+		else
+			this.proxyByDirect(id, handler, msg);
+	}
+
+	updateProxy(id, proxyId){
+		if(proxyID && this.handshakes[id])
+			this.handshakes[id].proxy = proxyId;
+	}
+
+	proxyByRing(id, handler, msg){
+		//needs to lookup the proxy last used for the dest...
+		let record = this.handshakes[id];
+
+		if(!record || !record.proxy)
+			this.chord.message(id, handler, msg)
+		else {
+			this.chord.message(ID.coerceString(record.proxy), ModuleRegistry.wrap(this.id, "proxy", {
+				data: {m: this.id, h: handler, o: msg),
+				dest: ID.coerceString(id),
+				src: ID.coerceString(this.chord.id)
+			}))
+		}
+	}
+
+	proxyByDirect(id, handler, msg) {
+		//Select either our successor, the server or a working directNode.
+		let successor = this.chord.node.finger[0].node,
+			server = this.chord.server.node,
+			directNodeNames = Object.getOwnPropertyNames(this.chord.directNodes),
+			chosen;
+
+		if(successor && (typeof successor == "RemoteNode") && successor.isConnected()) {
+			chosen = successor;
+		} else if (server && server.isConnected()) {
+			chosen = server;
+		} else if (directNodeNames.length !== 0) {
+			for (var i = directNodeNames.length - 1; i >= 0; i--) {
+				chosen = this.chord.directNodes[directNodeNames[i]];
+
+				if (chosen.isConnected())
+					break;
+				if (i==0)
+					chosen = null;
+			};
+		} else {
+			//Whelp kid you're all out of options.
+		}
+
+		chosen.message(ID.coerceString(chosen.id), ModuleRegistry.wrap(this.id, "proxy", {
+			data: {m: this.id, h: handler, o: msg),
+			dest: ID.coerceString(id),
+			src: ID.coerceString(this.chord.id)
+		}))
 	}
 }
 
