@@ -256,7 +256,7 @@ class ChordSignalChannel{
 		this.updateProxy(message.id, message.proxy)
 
 		//TODO: decrypt
-		this.chord.conductor.response(this, message);
+		this.chord.conductor.response(message, this);
 	}
 
 	recvSDPAnswer(message){
@@ -265,7 +265,7 @@ class ChordSignalChannel{
 		this.updateProxy(message.id, message.proxy)
 
 		//TODO: decrypt
-		this.chord.conductor.response(this, message);
+		this.chord.conductor.response(message, this);
 	}
 
 	recvICE(message) {
@@ -274,7 +274,7 @@ class ChordSignalChannel{
 		this.updateProxy(message.id, message.proxy)
 
 		//TODO: decrypt
-		this.chord.conductor.response(this, message);
+		this.chord.conductor.response(message, this);
 	}
 
 	//
