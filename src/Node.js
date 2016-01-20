@@ -281,6 +281,7 @@ class Node{
 
 				if(pred && ID.inOpenBound(pred.id, this.id, oSucc.id)) {
 					u.log(this.chord, `NEW SUCCESSOR FOUND`);
+					oSucc = pred;
 					return this.setSuccessor(pred);
 				} else {
 					return Promise.resolve();
