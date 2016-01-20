@@ -306,7 +306,7 @@ class ChordSignalChannel{
 	}
 
 	updateProxy(id, proxyId){
-		if(proxyID && this.handshakes[id])
+		if(proxyId && this.handshakes[id])
 			this.handshakes[id].proxy = proxyId;
 	}
 
