@@ -62,9 +62,22 @@ class Node{
 	//Promise updated
 	setSuccessor(val){
 		return new Promise((resolve, reject) => {
+			let end = () => {
+				this.setFinger(0, val);
+				resolve(val);
+			}
+
+			if(typeof val === "Node" || val.isConnected())
+				end();
+			else {
+				this.chord.nodeOverRing(ID.coerceString(val.id), val)
+					.then(
+						() => end()
+					)
+			}
+
 			//this.finger[0].node = val;
-			this.setFinger(0, val);
-			resolve(val)
+			
 		});
 	}
 
