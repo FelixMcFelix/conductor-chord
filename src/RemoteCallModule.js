@@ -76,7 +76,7 @@ class RemoteCallModule {
 					);
 				break;
 			case "closestPrecedingFinger":
-				this.chord.node.closestPrecedingFinger(this.chord.obtainRemoteNode(message.params[0]))
+				this.chord.node.closestPrecedingFinger(new ID(message.params[0]))
 					.then(
 						result => this.answer(message.returnID, message.reqID, result.id.idString)
 					);
