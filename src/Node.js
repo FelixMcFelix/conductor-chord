@@ -67,7 +67,7 @@ class Node{
 				resolve(val);
 			}
 
-			if(typeof val === "Node" || val.isConnected())
+			if(!val.isConnected || val.isConnected())
 				end();
 			else {
 				this.chord.nodeOverRing(ID.coerceString(val.id), val)
