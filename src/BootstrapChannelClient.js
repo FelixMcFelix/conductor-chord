@@ -2,6 +2,7 @@
 
 const msg_types = require("webrtc-conductor").enums,
 	WebSocket = require("ws"),
+	pki = require("node-forge").pki,
 	u = require("./UtilFunctions.js");
 
 class BootstrapChannelClient {
@@ -42,6 +43,7 @@ class BootstrapChannelClient {
 							u.log(t.chord, "Server has replied, perform the exchange of IDs.");
 							this.finalID = obj.id;
 							this.serverPem = obj.data;
+							this.serverKeyObj = pki.publicKeyFromPem(this.serverPem);
 							this.ws.onmessage = evt => {t._manager.response(evt, t);};
 							resolve(true);
 							break;
@@ -62,12 +64,12 @@ class BootstrapChannelClient {
 		});
 	}
 
-	send(id,type,data){
+	send(id, type, data){
 		u.log(this.chord, "BSTRAP: SENDING");
 
 		let obj = {
 			id: this.initialID,
-			data
+			data: this.serverKeyObj.encrypt(data);
 		};
 
 		switch(type){
@@ -93,7 +95,7 @@ class BootstrapChannelClient {
 		let obj = JSON.parse(evt.data),
 			out = {
 			type: null,
-			data: obj.data,
+			data: this.chord.key.privateKey.decrypt(obj.data),
 			id: null
 		};
 

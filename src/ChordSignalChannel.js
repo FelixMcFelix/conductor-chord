@@ -242,41 +242,50 @@ class ChordSignalChannel{
 	//
 
 	sendSDP(id, type, msg){
-		//TODO: encrypt
-		// this.message(id, "sdp-"+type, {id: ID.coerceString(this.chord.id), sdp: msg});
-		this.proxy(id, "sdp-"+type, {id: ID.coerceString(this.chord.id), sdp: msg});
+		let entry = this.fetchOrCreateNodeEntry(id);
+
+		this.proxy(id, "sdp-"+type, {
+			id: ID.coerceString(this.chord.id),
+			sdpEnc: entry.pubKey.encrypt(msg)
+		});
 	}
 
 	sendICE(id, msg){
-		//TODO: encrypt
-		// this.message(id, "ice", {id: ID.coerceString(this.chord.id), ice: msg})
-		this.proxy(id, "ice", {id: ID.coerceString(this.chord.id), ice: msg})
+		let entry = this.fetchOrCreateNodeEntry(id);
+
+		this.proxy(id, "ice", {
+			id: ID.coerceString(this.chord.id),
+			iceEnc: entry.pubKey.encrypt(msg)
+		});
 	}
 
 	recvSDPOffer(message){
-		//Message has: id, sdp
+		//Message has: id, sdpEnc
 
-		this.updateProxy(message.id, message.proxy)
+		this.updateProxy(message.id, message.proxy);
 
-		//TODO: decrypt
+		message.sdp = this.chord.key.privateKey.decrypt(message.sdpEnc);
+
 		this.chord.conductor.response(message, this);
 	}
 
 	recvSDPAnswer(message){
-		//Message has: id, sdp
+		//Message has: id, sdpEnc
 
-		this.updateProxy(message.id, message.proxy)
+		this.updateProxy(message.id, message.proxy);
 
-		//TODO: decrypt
+		message.sdp = this.chord.key.privateKey.decrypt(message.sdpEnc);
+
 		this.chord.conductor.response(message, this);
 	}
 
 	recvICE(message) {
-		//Message has: id, ice
+		//Message has: id, iceEnc
 
-		this.updateProxy(message.id, message.proxy)
+		this.updateProxy(message.id, message.proxy);
 
-		//TODO: decrypt
+		message.ice = this.chord.key.privateKey.decrypt(message.iceEnc);
+
 		this.chord.conductor.response(message, this);
 	}
 

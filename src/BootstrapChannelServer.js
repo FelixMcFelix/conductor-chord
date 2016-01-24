@@ -2,6 +2,7 @@
 
 const msg_types = require("webrtc-conductor").enums,
 	WebSocketServer = require("ws").Server,
+	pki = require("node-forge").pki,
 	u = require("./UtilFunctions.js");
 
 // This initial version uses the chord spec - i.e. we use a wrtc connection with the node
@@ -48,6 +49,7 @@ class BootstrapChannelServer{
 							this.id = obj.id;
 							this.registered = true;
 							this.pubKey = obj.data;
+							thid.pubKeyObj = pki.publicKeyFromPem(this.pubKey);
 							this.onmessage = evt => {t._manager.response(evt, t);};
 
 							u.log(t.chord, "Valid. Connection from "+this.id+". Message handler bound.");
@@ -75,7 +77,7 @@ class BootstrapChannelServer{
 		u.log(this.chord, "Send instruction given to server bootstrap.");
 
 		let obj = {
-			data,
+			data: this.connMap[id].pubKeyObj.encrypt(data),
 			id: this.id.idString
 		};
 
@@ -109,7 +111,7 @@ class BootstrapChannelServer{
 
 		let out = {
 			type: null,
-			data: obj.data,
+			data: this.chord.key.privateKey.decrypt(obj.data),
 			id: null
 		}
 
