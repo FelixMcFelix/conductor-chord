@@ -247,7 +247,7 @@ class ChordSignalChannel{
 
 		this.proxy(id, "sdp-"+type, {
 			id: ID.coerceString(this.chord.id),
-			sdpEnc: forgeUtil.encode64(entry.pubKey.encrypt(msg))
+			sdpEnc: entry.pubKey.encrypt(JSON.stringify(msg))
 		});
 	}
 
@@ -256,7 +256,7 @@ class ChordSignalChannel{
 
 		this.proxy(id, "ice", {
 			id: ID.coerceString(this.chord.id),
-			iceEnc: forgeUtil.encode64(entry.pubKey.encrypt(msg))
+			iceEnc: entry.pubKey.encrypt(JSON.stringify(msg))
 		});
 	}
 
@@ -265,7 +265,7 @@ class ChordSignalChannel{
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.sdp = this.chord.key.privateKey.decrypt(forgeUtil.decode64(message.sdpEnc));
+		message.sdp = JSON.parse(this.chord.key.privateKey.decrypt(message.sdpEnc));
 
 		this.chord.conductor.response(message, this);
 	}
@@ -275,7 +275,7 @@ class ChordSignalChannel{
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.sdp = this.chord.key.privateKey.decrypt(forgeUtil.decode64(message.sdpEnc));
+		message.sdp = JSON.parse(this.chord.key.privateKey.decrypt(message.sdpEnc));
 
 		this.chord.conductor.response(message, this);
 	}
@@ -285,7 +285,7 @@ class ChordSignalChannel{
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.ice = this.chord.key.privateKey.decrypt(forgeUtil.decode64(message.iceEnc));
+		message.ice = JSON.parse(this.chord.key.privateKey.decrypt(message.iceEnc));
 
 		this.chord.conductor.response(message, this);
 	}

@@ -70,7 +70,7 @@ class BootstrapChannelClient {
 
 		let obj = {
 			id: this.initialID,
-			data: forgeUtil.encode64(this.serverKeyObj.encrypt(data))
+			data: this.serverKeyObj.encrypt(JSON.stringify(data))
 		};
 
 		switch(type){
@@ -96,7 +96,7 @@ class BootstrapChannelClient {
 		let obj = JSON.parse(evt.data),
 			out = {
 			type: null,
-			data: this.chord.key.privateKey.decrypt(forgeUtil.decode64(obj.data)),
+			data: JSON.parse(this.chord.key.privateKey.decrypt(obj.data)),
 			id: null
 		};
 

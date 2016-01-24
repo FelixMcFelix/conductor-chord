@@ -78,7 +78,7 @@ class BootstrapChannelServer{
 		u.log(this.chord, "Send instruction given to server bootstrap.");
 
 		let obj = {
-			data: forgeUtil.encode64(this.connMap[id].pubKeyObj.encrypt(data)),
+			data: this.connMap[id].pubKeyObj.encrypt(JSON.stringify(data)),
 			id: this.id.idString
 		};
 
@@ -112,7 +112,7 @@ class BootstrapChannelServer{
 
 		let out = {
 			type: null,
-			data: this.chord.key.privateKey.decrypt(forgeUtil.decode64(obj.data)),
+			data: JSON.parse(this.chord.key.privateKey.decrypt(obj.data)),
 			id: null
 		}
 
