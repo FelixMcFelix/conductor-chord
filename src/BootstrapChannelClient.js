@@ -69,7 +69,7 @@ class BootstrapChannelClient {
 
 		let obj = {
 			id: this.initialID,
-			data: this.serverKeyObj.encrypt(data);
+			data: this.serverKeyObj.encrypt(data)
 		};
 
 		switch(type){
