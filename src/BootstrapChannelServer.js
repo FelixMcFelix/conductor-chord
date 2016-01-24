@@ -49,7 +49,7 @@ class BootstrapChannelServer{
 							this.id = obj.id;
 							this.registered = true;
 							this.pubKey = obj.data;
-							thid.pubKeyObj = pki.publicKeyFromPem(this.pubKey);
+							this.pubKeyObj = pki.publicKeyFromPem(this.pubKey);
 							this.onmessage = evt => {t._manager.response(evt, t);};
 
 							u.log(t.chord, "Valid. Connection from "+this.id+". Message handler bound.");
