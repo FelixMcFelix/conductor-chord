@@ -4,6 +4,7 @@ const ModuleRegistry = require("./ModuleRegistry.js"),
 	ID = require("./ID.js"),
 	msg_types = require("webrtc-conductor").enums,
 	pki = require("node-forge").pki,
+	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
 //handshake status codes.
@@ -246,7 +247,7 @@ class ChordSignalChannel{
 
 		this.proxy(id, "sdp-"+type, {
 			id: ID.coerceString(this.chord.id),
-			sdpEnc: entry.pubKey.encrypt(msg)
+			sdpEnc: forgeUtil.encode64(entry.pubKey.encrypt(msg))
 		});
 	}
 
@@ -255,7 +256,7 @@ class ChordSignalChannel{
 
 		this.proxy(id, "ice", {
 			id: ID.coerceString(this.chord.id),
-			iceEnc: entry.pubKey.encrypt(msg)
+			iceEnc: forgeUtil.encode64(entry.pubKey.encrypt(msg))
 		});
 	}
 
@@ -264,7 +265,7 @@ class ChordSignalChannel{
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.sdp = this.chord.key.privateKey.decrypt(message.sdpEnc);
+		message.sdp = this.chord.key.privateKey.decrypt(forgeUtil.decode64(message.sdpEnc));
 
 		this.chord.conductor.response(message, this);
 	}
@@ -274,7 +275,7 @@ class ChordSignalChannel{
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.sdp = this.chord.key.privateKey.decrypt(message.sdpEnc);
+		message.sdp = this.chord.key.privateKey.decrypt(forgeUtil.decode64(message.sdpEnc));
 
 		this.chord.conductor.response(message, this);
 	}
@@ -284,7 +285,7 @@ class ChordSignalChannel{
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.ice = this.chord.key.privateKey.decrypt(message.iceEnc);
+		message.ice = this.chord.key.privateKey.decrypt(forgeUtil.decode64(message.iceEnc));
 
 		this.chord.conductor.response(message, this);
 	}

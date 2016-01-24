@@ -3,6 +3,7 @@
 const msg_types = require("webrtc-conductor").enums,
 	WebSocket = require("ws"),
 	pki = require("node-forge").pki,
+	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
 class BootstrapChannelClient {
@@ -69,7 +70,7 @@ class BootstrapChannelClient {
 
 		let obj = {
 			id: this.initialID,
-			data: this.serverKeyObj.encrypt(data)
+			data: forgeUtil.encode64(this.serverKeyObj.encrypt(data))
 		};
 
 		switch(type){
@@ -95,7 +96,7 @@ class BootstrapChannelClient {
 		let obj = JSON.parse(evt.data),
 			out = {
 			type: null,
-			data: this.chord.key.privateKey.decrypt(obj.data),
+			data: this.chord.key.privateKey.decrypt(forgeUtil.decode64(obj.data)),
 			id: null
 		};
 

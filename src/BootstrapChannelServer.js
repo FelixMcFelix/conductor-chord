@@ -3,6 +3,7 @@
 const msg_types = require("webrtc-conductor").enums,
 	WebSocketServer = require("ws").Server,
 	pki = require("node-forge").pki,
+	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
 // This initial version uses the chord spec - i.e. we use a wrtc connection with the node
@@ -77,7 +78,7 @@ class BootstrapChannelServer{
 		u.log(this.chord, "Send instruction given to server bootstrap.");
 
 		let obj = {
-			data: this.connMap[id].pubKeyObj.encrypt(data),
+			data: forgeUtil.encode64(this.connMap[id].pubKeyObj.encrypt(data)),
 			id: this.id.idString
 		};
 
@@ -111,7 +112,7 @@ class BootstrapChannelServer{
 
 		let out = {
 			type: null,
-			data: this.chord.key.privateKey.decrypt(obj.data),
+			data: this.chord.key.privateKey.decrypt(forgeUtil.decode64(obj.data)),
 			id: null
 		}
 
