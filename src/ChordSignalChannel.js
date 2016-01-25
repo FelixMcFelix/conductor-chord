@@ -318,7 +318,7 @@ class ChordSignalChannel{
 			tag: message.tag
 		});
 
-		decipher.update(forgeUtil.createBuffer(obj.data));
+		decipher.update(forgeUtil.createBuffer(message.sdpEnc));
 		let success = decipher.finish();
 
 		message.sdp = (success) ? JSON.parse(decipher.output.data) : "";
@@ -342,7 +342,7 @@ class ChordSignalChannel{
 			tag: message.tag
 		});
 
-		decipher.update(forgeUtil.createBuffer(obj.data));
+		decipher.update(forgeUtil.createBuffer(message.sdpEnc));
 		let success = decipher.finish();
 
 		message.sdp = (success) ? JSON.parse(decipher.output.data) : "";
