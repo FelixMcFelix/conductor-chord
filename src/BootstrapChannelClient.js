@@ -114,7 +114,7 @@ class BootstrapChannelClient {
 		u.log(this.chord, "Client bootstrap received message:");
 
 		let obj = JSON.parse(evt.data),
-			iv = obj.iv,//this.chord.key.privateKey.decrypt(obj.encIv, "RSA-OAEP"),
+			iv = forgeUtil.createBuffer(obj.iv),//this.chord.key.privateKey.decrypt(obj.encIv, "RSA-OAEP"),
 			decipher = cipher.createDecipher('AES-GCM', this.aesKey);
 
 		decipher.start({
@@ -124,12 +124,12 @@ class BootstrapChannelClient {
 			tag: obj.tag
 		});
 
-		decipher.update(obj.data);
+		decipher.update(forgeUtil.createBuffer(obj.data));
 		let success = decipher.finish();
 		
 		let out = {
 			type: null,
-			data: JSON.parse(decipher.output.data),
+			data: (success) ? "" : JSON.parse(decipher.output.data),
 			id: null
 		};
 
