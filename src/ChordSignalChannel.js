@@ -4,6 +4,8 @@ const ModuleRegistry = require("./ModuleRegistry.js"),
 	ID = require("./ID.js"),
 	msg_types = require("webrtc-conductor").enums,
 	pki = require("node-forge").pki,
+	random = require("node-forge").random,
+	cipher = require("node-forge").cipher,
 	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
@@ -177,7 +179,7 @@ class ChordSignalChannel{
 			(entry.queue.shift())(entry.id);
 	}
 
-	finishEntry(lookupID, pubPEM, optNewName){
+	finishEntry(lookupID, pubPEM, optNewName, optAesKey){
 		let entry = this.fetchOrCreateNodeEntry(lookupID);
 
 		entry.status = HSHAKE_OBTAINED;
@@ -186,6 +188,8 @@ class ChordSignalChannel{
 			this.renameEntry(lookupID, optNewName);
 
 		entry.pubKey = pki.publicKeyFromPem(pubPEM);
+
+		entry.aesKey = (optAesKey) ? optAesKey : random.getBytesSync(16);
 
 		return entry;
 	}
@@ -219,18 +223,28 @@ class ChordSignalChannel{
 		//Message has: id, destID, pub.
 		u.log(this.chord, `Received handshake from: ${message.id}`);
 
-		this.finishEntry(message.id, message.pub);
+		let entry = this.finishEntry(message.id, message.pub);
 		this.updateProxy(message.id, message.proxy);
 
 		// this.message(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem})
-		this.proxy(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem});
+		this.proxy(message.id, "key-shake-reply", {
+			id: ID.coerceString(this.chord.id),
+			origID: message.destID,
+			pub: this.chord.pubKeyPem,
+			encKey: entry.pubKey.encrypt(entry.aesKey, "RSA-OAEP")
+		});
 	}
 
 	recvHandshakeReply(message){
-		//Message has: id, origID, pub.
+		//Message has: id, origID, pub, encKey.
 		u.log(this.chord, `Received handshake reply from ${message.origID}: true ID ${message.id}.`);
 
-		let entry = this.finishEntry(message.id, message.pub, message.origID);
+		let entry = this.finishEntry(message.id,
+			message.pub,
+			message.origID,
+			this.chord.key.privateKey.decrypt(message.encKey, "RSA-OAEP")
+		);
+
 		try {
 			this.chord.conductor.renameConnection(message.origID, message.id);
 		} finally {
@@ -245,47 +259,117 @@ class ChordSignalChannel{
 	sendSDP(id, type, msg){
 		let entry = this.fetchOrCreateNodeEntry(id);
 
+		let iv = random.getBytesSync(12),
+			cipherObj = cipher.createCipher('AES-GCM', entry.aesKey);
+
+		cipherObj.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128
+		});
+
+		cipherObj.update(forgeUtil.createBuffer(JSON.stringify(msg)));
+		cipherObj.finish();
+
 		this.proxy(id, "sdp-"+type, {
 			id: ID.coerceString(this.chord.id),
-			sdpEnc: entry.pubKey.encrypt(JSON.stringify(msg))
+			sdpEnc: cipherObj.output.data,
+			tag: cipherObj.mode.tag.data,
+			iv: iv
 		});
 	}
 
 	sendICE(id, msg){
 		let entry = this.fetchOrCreateNodeEntry(id);
 
+		let iv = random.getBytesSync(12),
+			cipherObj = cipher.createCipher('AES-GCM', entry.aesKey);
+
+		cipherObj.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128
+		});
+
+		cipherObj.update(forgeUtil.createBuffer(JSON.stringify(msg)));
+		cipherObj.finish();
+
 		this.proxy(id, "ice", {
 			id: ID.coerceString(this.chord.id),
-			iceEnc: entry.pubKey.encrypt(JSON.stringify(msg))
+			iceEnc: cipherObj.output.data,
+			tag: cipherObj.mode.tag.data,
+			iv: iv
 		});
 	}
 
 	recvSDPOffer(message){
-		//Message has: id, sdpEnc
+		//Message has: id, sdpEnc, tag, iv
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.sdp = JSON.parse(this.chord.key.privateKey.decrypt(message.sdpEnc));
+		let entry = this.fetchOrCreateNodeEntry(message.id),
+			iv = message.iv,
+			decipher = cipher.createDecipher('AES-GCM', entry.aesKey);
+
+		decipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128,
+			tag: message.tag
+		});
+
+		decipher.update(forgeUtil.createBuffer(obj.data));
+		let success = decipher.finish();
+
+		message.sdp = (success) ? JSON.parse(decipher.output.data) : "";
 
 		this.chord.conductor.response(message, this);
 	}
 
 	recvSDPAnswer(message){
-		//Message has: id, sdpEnc
+		//Message has: id, sdpEnc, tag, iv
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.sdp = JSON.parse(this.chord.key.privateKey.decrypt(message.sdpEnc));
+		let entry = this.fetchOrCreateNodeEntry(message.id),
+			iv = message.iv,
+			decipher = cipher.createDecipher('AES-GCM', entry.aesKey);
+
+		decipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128,
+			tag: message.tag
+		});
+
+		decipher.update(forgeUtil.createBuffer(obj.data));
+		let success = decipher.finish();
+
+		message.sdp = (success) ? JSON.parse(decipher.output.data) : "";
 
 		this.chord.conductor.response(message, this);
 	}
 
 	recvICE(message) {
-		//Message has: id, iceEnc
+		//Message has: id, iceEnc, tag, iv
 
 		this.updateProxy(message.id, message.proxy);
 
-		message.ice = JSON.parse(this.chord.key.privateKey.decrypt(message.iceEnc));
+		let entry = this.fetchOrCreateNodeEntry(message.id),
+			iv = message.iv,
+			decipher = cipher.createDecipher('AES-GCM', entry.aesKey);
+
+		decipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128,
+			tag: message.tag
+		});
+
+		decipher.update(forgeUtil.createBuffer(message.iceEnc));
+		let success = decipher.finish();
+
+		message.ice = (success) ? JSON.parse(decipher.output.data) : "";
 
 		this.chord.conductor.response(message, this);
 	}
