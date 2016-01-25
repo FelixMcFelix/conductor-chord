@@ -74,22 +74,22 @@ class BootstrapChannelClient {
 		u.log(this.chord, "BSTRAP: SENDING");
 
 		let iv = random.getBytesSync(12),
-			cipher = cipher.createCipher('AES-GCM', this.aesKey);
+			cipherObj = cipher.createCipher('AES-GCM', this.aesKey);
 
-		cipher.start({
+		cipherObj.start({
 			iv,
 			additionalData: 'binary-encoded string',
 			tagLength: 128
 		});
 
-		cipher.update(forgeUtil.createBuffer(data));
-		cipher.finish();
+		cipherObj.update(forgeUtil.createBuffer(data));
+		cipherObj.finish();
 
 		let obj = {
 			id: this.initialID,
 			encIv: this.serverKeyObj.encrypt(iv),
-			data: cipher.output.toString(),
-			tag: cipher.mode.tag.toString()
+			data: cipherObj.output.toString(),
+			tag: cipherObj.mode.tag.toString()
 		};
 
 		switch(type){
