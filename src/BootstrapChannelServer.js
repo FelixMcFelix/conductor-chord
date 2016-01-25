@@ -145,7 +145,7 @@ class BootstrapChannelServer{
 		
 		let out = {
 			type: null,
-			data: (success) ? "" : JSON.parse(decipher.output.data),
+			data: (success) ? JSON.parse(decipher.output.data) : "",
 			id: null
 		};
 
