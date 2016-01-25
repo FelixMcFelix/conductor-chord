@@ -255,6 +255,17 @@ describe("ID", () => {
 				&& value.inRightOpenBound(lb, ub)
 				&& value.inClosedBound(lb, ub)).to.be.true;
 		});
+
+		it("should return false for a known pathological open bounds case", () => {
+			var x = "i141pqw+irCFoF+r4QMcyim1mUSpFfIdcio3fw==";
+			var L = "i141pqw+irCFoF+r4QMcyim1mUSpFfIdcio3fw==";
+			var U = "ETpjYguTuaVzVdq4CmQj7300OsjV6FZKLkNEuw==";
+
+			// We expect x to NOT be within the region (x, U) = (L, U)
+			// Problem seen arising in Chord in the field...
+
+			expect(ID.inOpenBound(x, L, U)).to.be.false;
+		});
 	});
 
 	describe("Specific Forms", () => {
