@@ -64,7 +64,7 @@ class BootstrapChannelServer{
 								type: "bstrap-wel",
 								id: t.id.idString,
 								data: t.chord.pubKeyPem,
-								encKey: this.pubKeyObj.encrypt(this.aeskey, "RSA-OAEP");
+								encKey: this.pubKeyObj.encrypt(this.aeskey, "RSA-OAEP")
 							});
 							break;
 						default:
