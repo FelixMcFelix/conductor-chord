@@ -92,12 +92,13 @@ class BootstrapChannelServer{
 			tagLength: 128
 		});
 
-		cipherObj.update(forgeUtil.createBuffer(data));
+		cipherObj.update(forgeUtil.createBuffer(JSON.stringify(data)));
 		cipherObj.finish();
 
 		let obj = {
 			id: this.id.idString,
-			encIv: this.connMap[id].pubKeyObj.encrypt(iv.data),
+			//encIv: this.connMap[id].pubKeyObj.encrypt(iv.data),
+			iv: iv.data,
 			data: cipherObj.output.data,
 			tag: cipherObj.mode.tag.data
 		};
@@ -144,7 +145,7 @@ class BootstrapChannelServer{
 		
 		let out = {
 			type: null,
-			data: decipher.output.data,
+			data: JSON.parse(decipher.output.data),
 			id: null
 		};
 

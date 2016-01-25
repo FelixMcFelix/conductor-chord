@@ -82,7 +82,7 @@ class BootstrapChannelClient {
 			tagLength: 128
 		});
 
-		cipherObj.update(forgeUtil.createBuffer(data));
+		cipherObj.update(forgeUtil.createBuffer(JSON.stringify(data)));
 		cipherObj.finish();
 
 		let obj = {
@@ -129,7 +129,7 @@ class BootstrapChannelClient {
 		
 		let out = {
 			type: null,
-			data: decipher.output.data,
+			data: JSON.parse(decipher.output.data),
 			id: null
 		};
 
