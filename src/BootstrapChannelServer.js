@@ -140,7 +140,7 @@ class BootstrapChannelServer{
 			tag: obj.tag
 		});
 
-		decipher.update(obj.data);
+		decipher.update(forgeUtil.createBuffer(obj.data));
 		let success = decipher.finish();
 		
 		let out = {
