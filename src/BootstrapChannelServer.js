@@ -97,7 +97,7 @@ class BootstrapChannelServer{
 
 		let obj = {
 			id: this.id.idString,
-			encIv: this.connMap[id].pubKeyObj.encrypt(iv.toString("binary")),
+			encIv: this.connMap[id].pubKeyObj.encrypt(iv.data),
 			data: cipherObj.output.data,
 			tag: cipherObj.mode.tag.data
 		};
