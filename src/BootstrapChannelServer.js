@@ -126,7 +126,7 @@ class BootstrapChannelServer{
 
 	onmessage(evt){
 		let obj = JSON.parse(evt.data),
-			iv = this.chord.key.privateKey.decrypt(obj.encIv, "RSA-OAEP"),
+			iv = obj.iv,//this.chord.key.privateKey.decrypt(obj.encIv, "RSA-OAEP"),
 			decipher = cipher.createDecipher('AES-GCM', this.connMap[obj.id].aesKey);;
 
 		u.log(this.chord, "Server bootstrap received message:");
