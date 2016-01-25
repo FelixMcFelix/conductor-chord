@@ -234,7 +234,7 @@ describe("ID", () => {
 				&& value.inClosedBound(lb, ub)).to.be.true;
 		});
 
-		it("should map to all values if lb = ub", () => {
+		it("should map to all non-boundary values if lb = ub", () => {
 			var value = new ID(new Uint8Array([0x12,0x34,0x56])),
 				ub = new Uint8Array([0xff,0x00,0x00]),
 				lb = new Uint8Array([0xff,0x00,0x00]);
@@ -256,7 +256,7 @@ describe("ID", () => {
 				&& value.inClosedBound(lb, ub)).to.be.true;
 		});
 
-		it("should return false for a known pathological open bounds case", () => {
+		it("should return false for a known pathological open bounds case - UB > LB and x = LB", () => {
 			var x = "i141pqw+irCFoF+r4QMcyim1mUSpFfIdcio3fw==";
 			var L = "i141pqw+irCFoF+r4QMcyim1mUSpFfIdcio3fw==";
 			var U = "ETpjYguTuaVzVdq4CmQj7300OsjV6FZKLkNEuw==";

@@ -171,7 +171,7 @@ class ID {
 			order = ID.compare(al_LB, al_UB);
 
 		return [
-			(order < 0)? (cmpLB>0 && cmpUB<0) : (cmpLB<0 || cmpUB>0), //Strictly in bounds.
+			(order < 0)? (cmpLB>0 && cmpUB<0) : (cmpLB>0 || cmpUB<0), //Strictly in bounds.
 			cmpLB === 0, //On left bound.
 			cmpUB === 0 //On right bound.
 		];
