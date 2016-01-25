@@ -3,6 +3,8 @@
 const msg_types = require("webrtc-conductor").enums,
 	WebSocketServer = require("ws").Server,
 	pki = require("node-forge").pki,
+	random = require("node-forge").random,
+	cipher = require("node-forge").cipher,
 	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
@@ -51,6 +53,9 @@ class BootstrapChannelServer{
 							this.registered = true;
 							this.pubKey = obj.data;
 							this.pubKeyObj = pki.publicKeyFromPem(this.pubKey);
+
+							this.aesKey = random.getBytesSync(16);
+
 							this.onmessage = evt => {t._manager.response(evt, t);};
 
 							u.log(t.chord, "Valid. Connection from "+this.id+". Message handler bound.");
@@ -58,7 +63,8 @@ class BootstrapChannelServer{
 							safeSend(this, {
 								type: "bstrap-wel",
 								id: t.id.idString,
-								data: t.chord.pubKeyPem
+								data: t.chord.pubKeyPem,
+								encKey: this.pubKeyObj.encrypt(this.aeskey, "RSA-OAEP");
 							});
 							break;
 						default:
@@ -77,9 +83,23 @@ class BootstrapChannelServer{
 	send(id,type,data){
 		u.log(this.chord, "Send instruction given to server bootstrap.");
 
+		let iv = forge.random.getBytesSync(12),
+			cipher = forge.cipher.createCipher('AES-GCM', this.connMap[id].aesKey);
+
+		cipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128
+		});
+
+		cipher.update(forgeUtil.createBuffer(data));
+		cipher.finish();
+
 		let obj = {
-			data: this.connMap[id].pubKeyObj.encrypt(JSON.stringify(data)),
-			id: this.id.idString
+			id: this.id.idString,
+			encIv: this.connMap[id].pubKeyObj.encrypt(iv),
+			data: cipher.output.toString(),
+			tag: cipher.mode.tag.toString()
 		};
 
 		let target = this.connMap[id];
@@ -105,16 +125,28 @@ class BootstrapChannelServer{
 	}
 
 	onmessage(evt){
-		let obj = JSON.parse(evt.data);
+		let obj = JSON.parse(evt.data),
+			iv = this.chord.key.privateKey.decrypt(obj.encIv, "RSA-OAEP"),
+			decipher = cipher.createDecipher('AES-GCM', this.connMap[obj.id].aesKey);;
 
 		u.log(this.chord, "Server bootstrap received message:");
 		u.log(this.chord, obj);
 
+		decipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128,
+			tag: obj.tag
+		});
+
+		decipher.update(obj.data);
+		let success = decipher.finish();
+		
 		let out = {
 			type: null,
-			data: JSON.parse(this.chord.key.privateKey.decrypt(obj.data)),
+			data: decipher.output.toString(),
 			id: null
-		}
+		};
 
 		switch(obj.type){
 			case "bstrap-offer":

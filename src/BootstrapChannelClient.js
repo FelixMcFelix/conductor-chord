@@ -3,6 +3,8 @@
 const msg_types = require("webrtc-conductor").enums,
 	WebSocket = require("ws"),
 	pki = require("node-forge").pki,
+	random = require("node-forge").random,
+	cipher = require("node-forge").cipher,
 	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
@@ -45,6 +47,9 @@ class BootstrapChannelClient {
 							this.finalID = obj.id;
 							this.serverPem = obj.data;
 							this.serverKeyObj = pki.publicKeyFromPem(this.serverPem);
+
+							this.aesKey = this.chord.key.privateKey.decrypt(obj.encKey, "RSA-OAEP")
+
 							this.ws.onmessage = evt => {t._manager.response(evt, t);};
 							resolve(true);
 							break;
@@ -68,9 +73,23 @@ class BootstrapChannelClient {
 	send(id, type, data){
 		u.log(this.chord, "BSTRAP: SENDING");
 
+		let iv = forge.random.getBytesSync(12),
+			cipher = forge.cipher.createCipher('AES-GCM', this.aesKey);
+
+		cipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128
+		});
+
+		cipher.update(forgeUtil.createBuffer(data));
+		cipher.finish();
+
 		let obj = {
 			id: this.initialID,
-			data: this.serverKeyObj.encrypt(JSON.stringify(data))
+			encIv: this.serverKeyObj.encrypt(iv),
+			data: cipher.output.toString(),
+			tag: cipher.mode.tag.toString()
 		};
 
 		switch(type){
@@ -91,12 +110,25 @@ class BootstrapChannelClient {
 	}
 
 	onmessage(evt){
-		u.log(this.chord, "Client bootstrap received message:")
+		u.log(this.chord, "Client bootstrap received message:");
 
 		let obj = JSON.parse(evt.data),
-			out = {
+			iv = this.chord.key.privateKey.decrypt(obj.encIv, "RSA-OAEP"),
+			decipher = cipher.createDecipher('AES-GCM', this.aesKey);
+
+		decipher.start({
+			iv,
+			additionalData: 'binary-encoded string',
+			tagLength: 128,
+			tag: obj.tag
+		});
+
+		decipher.update(obj.data);
+		let success = decipher.finish();
+		
+		let out = {
 			type: null,
-			data: JSON.parse(this.chord.key.privateKey.decrypt(obj.data)),
+			data: decipher.output.toString(),
 			id: null
 		};
 
