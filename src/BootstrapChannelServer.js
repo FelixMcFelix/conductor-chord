@@ -83,8 +83,8 @@ class BootstrapChannelServer{
 	send(id,type,data){
 		u.log(this.chord, "Send instruction given to server bootstrap.");
 
-		let iv = forge.random.getBytesSync(12),
-			cipher = forge.cipher.createCipher('AES-GCM', this.connMap[id].aesKey);
+		let iv = random.getBytesSync(12),
+			cipher = cipher.createCipher('AES-GCM', this.connMap[id].aesKey);
 
 		cipher.start({
 			iv,

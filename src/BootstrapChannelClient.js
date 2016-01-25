@@ -73,8 +73,8 @@ class BootstrapChannelClient {
 	send(id, type, data){
 		u.log(this.chord, "BSTRAP: SENDING");
 
-		let iv = forge.random.getBytesSync(12),
-			cipher = forge.cipher.createCipher('AES-GCM', this.aesKey);
+		let iv = random.getBytesSync(12),
+			cipher = cipher.createCipher('AES-GCM', this.aesKey);
 
 		cipher.start({
 			iv,
