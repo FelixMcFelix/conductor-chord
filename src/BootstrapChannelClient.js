@@ -88,8 +88,8 @@ class BootstrapChannelClient {
 		let obj = {
 			id: this.initialID,
 			encIv: this.serverKeyObj.encrypt(iv),
-			data: cipherObj.output.toString(),
-			tag: cipherObj.mode.tag.toString()
+			data: cipherObj.output.data,
+			tag: cipherObj.mode.tag.data
 		};
 
 		switch(type){
@@ -128,7 +128,7 @@ class BootstrapChannelClient {
 		
 		let out = {
 			type: null,
-			data: decipher.output.toString(),
+			data: decipher.output.data,
 			id: null
 		};
 

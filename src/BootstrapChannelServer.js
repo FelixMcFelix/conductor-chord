@@ -98,8 +98,8 @@ class BootstrapChannelServer{
 		let obj = {
 			id: this.id.idString,
 			encIv: this.connMap[id].pubKeyObj.encrypt(iv),
-			data: cipherObj.output.toString(),
-			tag: cipherObj.mode.tag.toString()
+			data: cipherObj.output.data,
+			tag: cipherObj.mode.tag.data
 		};
 
 		let target = this.connMap[id];
@@ -144,7 +144,7 @@ class BootstrapChannelServer{
 		
 		let out = {
 			type: null,
-			data: decipher.output.toString(),
+			data: decipher.output.data,
 			id: null
 		};
 
