@@ -210,6 +210,22 @@ class Node{
 			resolve(this);
 		} );
 	}
+
+	firstSucceedingFinger(id) {
+		//New selector for fingers and self.
+		//cPF is not appropriate for message routing.
+		//No promise support as can only be called locally, and only depends on local state.
+
+		//For each finger, check if the ID given is in the range (this, finger[i]]
+		//If so, return that node.
+		//If none found, return furthest finger.
+
+		for (var i = 0; i < this.finger.length-1; i++)
+			if(ID.inLeftOpenBound(id, this.id, this.finger[i].node.id))
+				return this.finger[i].node;
+
+		return this.finger[this.finger.length-1].node;
+	}
 	
 	//Promise updated
 	findSuccessor(id){
@@ -359,10 +375,8 @@ class Node{
 			this.chord.registry.parse(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.closestPrecedingFinger(id)
-				.then(
-					node => node.message(id, msg)
-				)
+			this.firstSucceedingFinger(id)
+				.message(id, msg);
 		}
 	}
 
