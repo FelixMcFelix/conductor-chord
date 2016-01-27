@@ -52,6 +52,19 @@ class Node{
 		}
 	}
 
+	preserveFingerInvariant(){
+		//We can observe that the largest value for any node in the finger table is our predecessor.
+		//This property is required for correctness of the system to hold.
+
+		for (var i = 0; i < this.finger.length; i++) {
+			let finger = this.finger[i];
+
+			if(this.predecessor && ID.inLeftOpenBound(finger.node.id, this.id, this.predecessor.id))
+				finger.node = this.predecessor;
+
+		};
+	}
+
 	//Promise updated
 	getSuccessor(){
 		return new Promise((resolve, reject) => {
@@ -92,6 +105,9 @@ class Node{
 	setPredecessor(val){
 		return new Promise((resolve, reject) => {
 			this.predecessor = val;
+
+			this.preserveFingerInvariant();
+
 			resolve(val);
 		});
 	}
@@ -213,7 +229,7 @@ class Node{
 
 	firstSucceedingFinger(id) {
 		//New selector for fingers and self.
-		//cPF is not appropriate for message routing.
+		//cPF is maybe not appropriate for message routing.
 		//No promise support as can only be called locally, and only depends on local state.
 
 		//For each finger, check if the ID given is in the range (this, finger[i]]
@@ -375,8 +391,19 @@ class Node{
 			this.chord.registry.parse(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.firstSucceedingFinger(id)
-				.message(id, msg);
+			this.closestPrecedingFinger(id)
+			.then(
+				dest => {
+					if(dest===this){
+						//Successor is likely inaccurate - the earlier checks determined that
+						//the message was NOT for us.
+						//Send to successor, it may know better.
+						this.finger[0].node.message(id, msg);
+					} else {
+						dest.message(id, msg);
+					}
+				}
+			)
 		}
 	}
 
