@@ -128,6 +128,54 @@ describe("ID", () => {
 
 			expect(idRes.compareTo(result) === 0).to.be.true;
 		});
+
+		it("should properly perform the one's complement of an array buffer", () => {
+			var orig = new Uint8Array([0x0f,0x70]);
+			var resultOracle = new Int8Array([0xf0,0x8f]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.onesComplement(id1);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
+
+		it("should properly perform the two's complement of an array buffer", () => {
+			var orig = new Uint8Array([0x0f,0x70]);
+			var resultOracle = new Int8Array([0xf0,0x90]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.twosComplement(id1);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
+
+		it("should allow subtraction over the domain", () => {
+			var orig = new Uint8Array([0x01,0x00]);
+			var resultOracle = new Uint8Array([0x00,0xff]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.subtract(id1, [0x01]);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
+
+		it("should overflow properly with subtraction (simulate modular arithmetic)", () => {
+			var orig = new Uint8Array([0x00,0x00]);
+			var resultOracle = new Uint8Array([0xfa,0x00]);
+
+			var id1 = new ID(orig);
+			var idRes = new ID(resultOracle);
+			
+			var result = ID.subtract(id1, [0x06,0x00]);
+
+			expect(idRes.compareTo(result) === 0).to.be.true;
+		});
 	});
 
 	describe("Bounds Checks", () => {
@@ -184,6 +232,39 @@ describe("ID", () => {
 				&& value.inLeftOpenBound(lb, ub)
 				&& value.inRightOpenBound(lb, ub)
 				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should map to all non-boundary values if lb = ub", () => {
+			var value = new ID(new Uint8Array([0x12,0x34,0x56])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0xff,0x00,0x00]);
+
+			expect(value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should include itself if lb = ub and at least one bound is closed", () => {
+			var value = new ID(new Uint8Array([0xff,0x00,0x00])),
+				ub = new Uint8Array([0xff,0x00,0x00]),
+				lb = new Uint8Array([0xff,0x00,0x00]);
+
+			expect(!value.inOpenBound(lb, ub)
+				&& value.inLeftOpenBound(lb, ub)
+				&& value.inRightOpenBound(lb, ub)
+				&& value.inClosedBound(lb, ub)).to.be.true;
+		});
+
+		it("should return false for a known pathological open bounds case - UB > LB and x = LB", () => {
+			var x = "i141pqw+irCFoF+r4QMcyim1mUSpFfIdcio3fw==";
+			var L = "i141pqw+irCFoF+r4QMcyim1mUSpFfIdcio3fw==";
+			var U = "ETpjYguTuaVzVdq4CmQj7300OsjV6FZKLkNEuw==";
+
+			// We expect x to NOT be within the region (x, U) = (L, U)
+			// Problem seen arising in Chord in the field...
+
+			expect(ID.inOpenBound(x, L, U)).to.be.false;
 		});
 	});
 

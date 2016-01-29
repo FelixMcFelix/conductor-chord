@@ -50,6 +50,10 @@ class ID {
 		return ID.add(this, arrayLike);
 	}
 
+	subtract(arrayLike){
+		return ID.subtract(this, arrayLike);
+	}
+
 	inOpenBound(aL1, aL2){
 		return ID.inOpenBound(this, aL1, aL2);
 	}
@@ -122,19 +126,38 @@ class ID {
 		return new ID(out);
 	}
 
+	static subtract(aL1, aL2){
+		let arr1 = ID.uint8FromArrayLike(aL1),
+			arr2 = ID.uint8FromArrayLike(aL2),
+			out,
+			subtraction;
+
+		if(arr1.length > arr2.length){
+			out = arr1.slice(0);
+			subtraction = new Uint8Array(arr1.length);
+			subtraction.set(arr2, arr1.length-arr2.length);
+		} else {
+			out = new Uint8Array(arr2.length);
+			out.set(arr1, arr2.length-arr1.length);
+			subtraction = arr2;
+		}
+
+		return ID.add(out, ID.twosComplement(subtraction));
+	}
+
 	static inOpenBound(al_value, al_LB, al_UB){
 		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
-		return bVal[0] && !(bVal[1] || bVal[2]);
+		return bVal[0];
 	}
 
 	static inLeftOpenBound(al_value, al_LB, al_UB){
 		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
-		return bVal[0] || bVal[2] && !bVal[1];
+		return bVal[0] || bVal[2];
 	}
 
 	static inRightOpenBound(al_value, al_LB, al_UB){
 		let bVal = ID.boundsChecks(al_value, al_LB, al_UB);
-		return bVal[0] || bVal[1] && !bVal[2];
+		return bVal[0] || bVal[1];
 	}
 
 	static inClosedBound(al_value, al_LB, al_UB){
@@ -148,7 +171,7 @@ class ID {
 			order = ID.compare(al_LB, al_UB);
 
 		return [
-			(order <= 0)? (cmpLB>0 && cmpUB<0) : (cmpLB<0 || cmpUB>0), //Strictly in bounds.
+			(order < 0)? (cmpLB>0 && cmpUB<0) : (cmpLB>0 || cmpUB<0), //Strictly in bounds.
 			cmpLB === 0, //On left bound.
 			cmpUB === 0 //On right bound.
 		];
@@ -164,6 +187,20 @@ class ID {
 		return out;
 	}
 
+	static onesComplement(arrayLike){
+		let arr = ID.uint8FromArrayLike(arrayLike).slice(0);
+
+		for (var i = arr.length - 1; i >= 0; i--) {
+			arr[i] = ~arr[i]
+		};
+
+		return arr;
+	}
+
+	static twosComplement(arrayLike){
+		return ID.add([0x01], ID.onesComplement(arrayLike));
+	}
+
 	static uint8FromArrayLike(arrayLike){
 		if (arrayLike instanceof ArrayBuffer || arrayLike instanceof Array){
 			return new Uint8Array(arrayLike);
@@ -171,8 +208,18 @@ class ID {
 			return new Uint8Array(arrayLike.buffer);
 		} else if (arrayLike instanceof ID){
 			return arrayLike.dataView;
+		} else if (typeof arrayLike === "string"){
+			return new Uint8Array(StringView.makeFromBase64(arrayLike).buffer);
 		} else {
 			throw new TypeError(arrayLike + "is not an array-like type: "+ typeof arrayLike);
+		}
+	}
+
+	static coerceString(unknownIDType){
+		if (typeof unknownIDType === "string") {
+			return unknownIDType
+		} else {
+			return unknownIDType.idString;
 		}
 	}
 }
