@@ -6,6 +6,7 @@ const u = require("./UtilFunctions.js"),
 	BootstrapChannelServer = require("./BootstrapChannelServer.js"),
 	ModuleRegistry = require("./ModuleRegistry.js"),
 	RemoteCallModule = require("./RemoteCallModule.js"),
+	FileStore = require("./FileStore.js"),
 	Node = require("./Node.js"),
 	RemoteNode = require("./RemoteNode.js"),
 	ID = require("./ID.js"),
@@ -60,31 +61,29 @@ class ConductorChord {
 		//Set up a Node object to represent the local state.
 		u.log(this, "Creating local node.");
 		this.node = new Node(this);
-		u.log(this, "Created.");
+
+		//Create a module registry, register the RPC default module.
+		//Create file storage subsystem.
+		u.log(this, "Establishing registry, core modules...");
+		this.registry = new ModuleRegistry();
+		this.rcm = new RemoteCallModule(this);
+		this.fileStore = new FileStore(this);
 
 		//Store the K,V pair <ID, pubKey> on the local view of the DHT.
 		//This will be relocated once an actual network is joined.
 		u.log(this, "Adding public key to local store.");
 		this.addItem(this.id.idString, this.pubKeyPem);
-		u.log(this, "Added.");
-
-		//Create a module registry, register the RPC default module.
-		this.registry = new ModuleRegistry();
-		this.rcm = new RemoteCallModule(this);
 
 		//Prepare the standard connection channel and an instance of Conductor:
 		//(SignalChannel registers itself to the module registry)
 		u.log(this, "Creating standard channel and conductor.");
 		this.config.conductorConfig.channel = new ChordSignalChannel(this);
 		this.conductor = Conductor.create(this.config.conductorConfig);
-		u.log(this, "Channel and conductor created? "+this.conductor!=null);
 
 		//Set onconnection event to handle connections made to us.
 		this.conductor.onconnection = conn => {
 			conn.ondatachannel = dChan => {
 				dChan.onmessage = msg => {
-					// console.log(a);
-					// dChan.send(a.data);
 					let parsy = JSON.parse(msg.data);
 					this.message(parsy.id, parsy.data)
 				};
@@ -241,23 +240,11 @@ class ConductorChord {
 	}
 
 	addItem(key, value){
-		let hash = sha3["sha3_"+this.config.idWidth].buffer(key);
-		this.addItemDirect(hash, value)
-	}
-
-	addItemDirect(hash, value){
-		this.node.add(hash, value)
+		return this.fileStore.store(key, value);
 	}
 
 	lookupItem(key){
-		//should return a promise.
-
-		let hash = sha3["sha3_"+this.config.idWidth].buffer(key);
-		return this.lookupItemDirect(hash);
-	}
-
-	lookupItemDirect(id){
-		return this.node.lookup(id);
+		return this.fileStore.retrieve(key);
 	}
 
 	message(id, msg, bypass){

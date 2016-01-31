@@ -24,12 +24,14 @@
   "homepage": "https://github.com/FelixMcFelix/conductor-chord#readme",
   "dependencies": {
     "js-sha3": "^0.5.1",
+    "machina": "^1.1.2",
     "node-forge": "^0.6.38",
     "webrtc-conductor": "git+https://github.com/FelixMcFelix/webrtc-conductor.git#dev",
     "ws": "^0.8.0"
   },
   "devDependencies": {
-    "chai": "^3.4.1",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.2.0",
     "gulp": "^3.9.0",
     "gulp-mocha": "^2.1.3"
   }
