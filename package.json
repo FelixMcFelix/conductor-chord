@@ -33,6 +33,6 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
     "gulp": "^3.9.0",
-    "gulp-mocha": "^2.1.3"
+    "gulp-mocha": "^2.2.0"
   }
 }

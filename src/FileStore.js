@@ -18,7 +18,6 @@ class FileStore extends RemoteCallable {
 
 		switch (handler) {
 			case "store":
-				//message has 2 fields: key, value, reqId.
 				this.store(message.params[0], message.params[1])
 					.then(
 						response => this.answer(message.returnID, message.reqID, response)

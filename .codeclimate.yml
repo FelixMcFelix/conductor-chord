@@ -11,3 +11,6 @@ ratings:
 exclude_paths:
 - test/**/*
 - lib/**/*
+- lib/*
+- web_modules/**/*
+- web_modules/*
