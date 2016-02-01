@@ -1,132 +1,105 @@
 "use strict";
 
-const ModuleRegistry = require("./ModuleRegistry"),
+const RemoteCallable = require("./RemoteCallable.js"),
 	RemoteNode = require("./RemoteNode.js"),
 	ID = require("./ID.js");
 
-class RemoteCallModule {
+class RemoteCallModule extends RemoteCallable {
 	constructor(chord){
-		this.id = "ChordRPC";
-		this.chord = chord;
-
-		this.reqID = 0;
-		this.requestSpace = {};
-
+		super(chord, "ChordRPC");
 		chord.registerModule(this);
 	}
 
-	call(id, method, params){
-		let reqID = this.reqID++,
-			destID = (typeof id === "string") ? id : id.idString,
-			msgText = ModuleRegistry.wrap(this.id, method, {
-				params,
-				reqID,
-				returnID: this.chord.id.idString
-			});
+	delegate (handler, message) {
+		if(super.delegate(handler, message))
+			return;
 
-		this.chord.message(destID, msgText);
-
-		return new Promise((resolve, reject) => {
-			this.requestSpace[reqID] = {resolve, reject};
-		});
-	}
-
-	delegate(handler, message){
 		switch(handler){
 			case "getSuccessor":
 				this.chord.node.getSuccessor()
 					.then(
-						result => this.answer(message.returnID, message.reqID, (result) ? result.id.idString : result)
+						result => this.answer(message, (result) ? result.id.idString : result)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "setSuccessor":
 				this.chord.node.setSuccessor(this.chord.obtainRemoteNode(message.params[0]))
 					.then(
-						result => this.answer(message.returnID, message.reqID, null)
+						result => this.answer(message, null)
 					);
 				break;
 			case "getPredecessor":
 				this.chord.node.getPredecessor()
 					.then(
-						result => this.answer(message.returnID, message.reqID, (result) ? result.id.idString : result)
+						result => this.answer(message, (result) ? result.id.idString : result)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "setPredecessor":
 				this.chord.node.setPredecessor(this.chord.obtainRemoteNode(message.params[0]))
 					.then(
-						result => this.answer(message.returnID, message.reqID, null)
+						result => this.answer(message, null)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "updateFingerTable":
 				this.chord.node.updateFingerTable(this.chord.obtainRemoteNode(message.params[0]), message.params[1])
 					.then(
-						result => this.answer(message.returnID, message.reqID, null)
+						result => this.answer(message, null)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "findSuccessor":
 				this.chord.node.findSuccessor(new ID(message.params[0]))
 					.then(
-						result => this.answer(message.returnID, message.reqID, result.id.idString)
+						result => this.answer(message, result.id.idString)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "findPredecessor":
 				this.chord.node.findPredecessor(new ID(message.params[0]))
 					.then(
-						result => this.answer(message.returnID, message.reqID, result.id.idString)
+						result => this.answer(message, result.id.idString)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "closestPrecedingFinger":
 				this.chord.node.closestPrecedingFinger(new ID(message.params[0]))
 					.then(
-						result => this.answer(message.returnID, message.reqID, result.id.idString)
+						result => this.answer(message, result.id.idString)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "notify":
 				this.chord.node.notify(this.chord.obtainRemoteNode(message.params[0]))
 					.then(
-						result => this.answer(message.returnID, message.reqID, null)
+						result => this.answer(message, null)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
-			case "message":
-				break;
 			case "unlinkClient":
-				this.answer(message.returnID,
-					message.reqID,
-					this.chord.node.unlinkClient(message.params[0])
-				);
-				break;
-			case "lookup":
-				break;
-			case "add":
-				break;
-			case "answer":
-				if(message.returnID === this.chord.id.idString){
-					this.requestSpace[message.reqID].resolve(message.result);
-					delete this.requestSpace[message.reqID];
-				} else {
-					this.bypassAnswer(message);
-				}	
-				break;
-			case "error":
-				this.requestSpace[message.reqID].reject(message.reason);
-				delete this.requestSpace[message.reqID];
+				this.answer(message, this.chord.node.unlinkClient(message.params[0]));
 				break;
 			default:
 				//ILLEGAL CALL
 				break;
 		}
-	}
-
-	answer(returnID, reqID, result){
-		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "answer", {reqID, result, returnID, hops: 5}));
-	}
-
-	error(returnID, reqID, result){
-		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "error", {reqID, result, returnID, hops: 10}));
-	}
-
-	bypassAnswer(answerObj){
-		this.chord.message(answerObj.returnID, ModuleRegistry.wrap(this.id, "answer", answerObj), true);
 	}
 }
 

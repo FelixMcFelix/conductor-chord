@@ -1,6 +1,10 @@
-var expect = require("chai").expect,
+var chai = require("chai"),
+	chaiAsPromised = require("chai-as-promised"),
+	expect = require("chai").expect,
 	Chord = require("../src/Chord.js"),
 	ID = require("../src/ID.js");
+
+chai.use(chaiAsPromised);
 
 describe("Chord", () => {
 	describe("Construction", function() {
@@ -19,9 +23,9 @@ describe("Chord", () => {
 		it("should hold the entry corresponding to its own public key", () => {
 			var c = new Chord();
 
-			var res = c.lookupItem(c.id.idString);
-
-			expect(res === c.pubKeyPem).to.be.true;
+			return expect(
+				c.lookupItem(c.id.idString)
+			).to.eventually.equal(c.pubKeyPem);
 		});
 	});	
 });
