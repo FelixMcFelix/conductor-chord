@@ -75,7 +75,12 @@ class RemoteCallable {
 	}
 
 	_rcvAnswer (message) {
-		if(message.returnID === this.chord.id.idString){
+		let myReqStore = this._requestSpace[message.reqID];
+
+		if(myReqStore && message.returnID && message.returnID === this.chord.id.idString){
+			//CLEAR THE TIMEOUT ASAP.
+			clearTimeout(myReqStore.timeout);
+
 			this._requestSpace[message.reqID].resolve(message.result);
 			delete this._requestSpace[message.reqID];
 		} else {
@@ -117,13 +122,14 @@ class RemoteCallable {
 	}
 
 	setupTimeoutForRequest (requestSpaceEntry, duration) {
-		return setTimeout(()=>this._rcvError({
-			reason: "Timed out.",
-			reqID: requestSpaceEntry.reqID,
-			returnID: requestSpaceEntry.msg.returnID,
-			_remoteNo: requestSpaceEntry.msg._remoteNo
-
-		}), duration);
+		return setTimeout(()=> {
+			if(requestSpaceEntry) this._rcvError({
+				reason: "Timed out.",
+				reqID: requestSpaceEntry.reqID,
+				returnID: requestSpaceEntry.msg.returnID,
+				_remoteNo: requestSpaceEntry.msg._remoteNo
+			})
+		}, duration);
 	}
 
 	_cacheAnswer (returnID, reqID, result) {
