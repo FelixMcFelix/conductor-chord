@@ -30,16 +30,19 @@ class RemoteCallable {
 			msgText = ModuleRegistry.wrap(this.id, method, msg);
 
 		return new Promise((resolve, reject) => {
-			this._requestSpace[reqID] = {
+			let myReqObj = {
 				reqID,
 				destID,
 				method,
 				msg,
 				resolve,
 				reject,
-				triesLeft: this._rcRetries,
-				timeout: this.setupTimeoutForRequest(this._requestSpace[reqID], this._rcTimeout)
+				triesLeft: this._rcRetries
 			};
+
+			myReqObj.timeout = this.setupTimeoutForRequest(myReqObj, this._rcTimeout);
+
+			this._requestSpace[reqID] = myReqObj;
 
 			this.chord.message(destID, msgText);
 		});
@@ -109,10 +112,10 @@ class RemoteCallable {
 				//Set up for next attempt.
 				myReqStore.msg._remoteNo++;
 				myReqStore.triesLeft--;
-				myReqStore.timeout = this.setupTimeoutForRequest(myReqSpace, this._rcTimeout);
+				myReqStore.timeout = this.setupTimeoutForRequest(myReqStore, this._rcTimeout);
 
 				//Try, try again.
-				this.chord.message(myReqSpace.destID, ModuleRegistry.wrap(this.id, myReqStore.method, myReqStore.msg));
+				this.chord.message(myReqStore.destID, ModuleRegistry.wrap(this.id, myReqStore.method, myReqStore.msg));
 			}
 
 		} else {
@@ -134,13 +137,18 @@ class RemoteCallable {
 
 	_cacheAnswer (returnID, reqID, result) {
 		//Store.
+
 		if(!(returnID in this._answerCache))
 			this._answerCache[returnID] = {};
+
 		this._answerCache[returnID][reqID] = result;
+
 		//Set up the answer's deletion later.
+
 		setTimeout( () => {
 			delete this._answerCache[returnID][reqID];
 		}, this._rcCacheDuration)
+
 	}
 
 	answer (message, result) {
