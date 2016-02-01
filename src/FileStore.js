@@ -20,13 +20,19 @@ class FileStore extends RemoteCallable {
 			case "store":
 				this.store(message.params[0], message.params[1])
 					.then(
-						response => this.answer(message.returnID, message.reqID, response)
+						response => this.answer(message, response)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			case "retrieve":
 				this.retrieve(message.params[0])
 					.then(
-						response => this.answer(message.returnID, message.reqID, response)
+						response => this.answer(message, response)
+					)
+					.catch(
+						reason => this.error(message, reason)
 					);
 				break;
 			default:

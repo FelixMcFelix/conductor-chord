@@ -416,15 +416,6 @@ class Node{
 		return false;
 	}
 
-	// Item management
-	
-	lookup(id){
-		//TODO
-	}
-	
-	add(id, value){
-		//TODO
-	}
 }
 
 module.exports = Node;

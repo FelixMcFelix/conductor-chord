@@ -22,6 +22,12 @@ class ConductorChord {
 
 			keyWidth: 2048,
 
+			remoteCall: {
+				timeout: 5000,
+				retries: 2,
+				cacheAnswerDuration: 20000
+			},
+
 			serverConfig: {
 				port: 7171
 			},
