@@ -38,7 +38,7 @@ class RemoteCallable {
 				resolve,
 				reject,
 				triesLeft: this._rcRetries,
-				timeout: setupTimeoutForRequest(this._requestSpace[reqID], this._rcTimeout)
+				timeout: this.setupTimeoutForRequest(this._requestSpace[reqID], this._rcTimeout)
 			};
 
 			this.chord.message(destID, msgText);
@@ -49,10 +49,10 @@ class RemoteCallable {
 		let handled = true;
 		switch (handler) {
 			case "answer":
-				_rcvAnswer(message);
+				this._rcvAnswer(message);
 				break;
 			case "error":
-				_rcvError(message);
+				this._rcvError(message);
 			default:
 				//Traffic is either not ours,
 				//or is a remote call.
@@ -104,7 +104,7 @@ class RemoteCallable {
 				//Set up for next attempt.
 				myReqStore.msg._remoteNo++;
 				myReqStore.triesLeft--;
-				myReqStore.timeout = setupTimeoutForRequest(myReqSpace, this._rcTimeout);
+				myReqStore.timeout = this.setupTimeoutForRequest(myReqSpace, this._rcTimeout);
 
 				//Try, try again.
 				this.chord.message(myReqSpace.destID, ModuleRegistry.wrap(this.id, myReqStore.method, myReqStore.msg));
@@ -114,6 +114,16 @@ class RemoteCallable {
 			//Try and route it to its rightful owner?
 			this.bypassError(message);
 		}
+	}
+
+	setupTimeoutForRequest (requestSpaceEntry, duration) {
+		return setTimeout(()=>this._rcvError({
+			reason: "Timed out.",
+			reqID: requestSpaceEntry.reqID,
+			returnID: requestSpaceEntry.msg.returnID,
+			_remoteNo: requestSpaceEntry.msg._remoteNo
+
+		}), duration);
 	}
 
 	_cacheAnswer (returnID, reqID, result) {
@@ -156,16 +166,6 @@ class RemoteCallable {
 		if(errorObj.hops)
 			this.chord.message(errorObj.returnID, ModuleRegistry.wrap(this.id, "error", errorObj), true);
 	}
-}
-
-function setupTimeoutForRequest(requestSpaceEntry, duration){
-	return setTimeout(()=>this._rcvError({
-		reason: "Timed out.",
-		reqID: requestSpaceEntry.reqID,
-		returnID: requestSpaceEntry.msg.returnID,
-		_remoteNo: requestSpaceEntry.msg._remoteNo
-
-	}), duration);
 }
 
 module.exports = RemoteCallable;
