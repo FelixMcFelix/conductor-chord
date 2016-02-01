@@ -118,6 +118,8 @@ class RemoteCallable {
 
 	_cacheAnswer (returnID, reqID, result) {
 		//Store.
+		if(!(returnID in this._answerCache))
+			this._answerCache[returnID] = {};
 		this._answerCache[returnID][reqID] = result;
 		//Set up the answer's deletion later.
 		setTimeout( () => {
