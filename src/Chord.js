@@ -12,6 +12,7 @@ const u = require("./UtilFunctions.js"),
 	ID = require("./ID.js"),
 	sha3 = require("js-sha3"),
 	pki = require("node-forge").pki,
+	machina = require('machina'),
 	Conductor = require("webrtc-conductor");
 
 
@@ -67,6 +68,9 @@ class ConductorChord {
 		//Set up a Node object to represent the local state.
 		u.log(this, "Creating local node.");
 		this.node = new Node(this);
+
+		u.log(this, "Creating state machine.");
+		this.createStateMachine();
 
 		//Create a module registry, register the RPC default module.
 		//Create file storage subsystem.
@@ -197,11 +201,51 @@ class ConductorChord {
 		} );
 	}
 
+	get state () {
+		if(this.statemachine)
+			return this.statemachine.state;
+		return "disconnected";
+	}
+
+	createStateMachine () {
+		this.statemachine = new machina.Fsm({
+			initialize: function (options) {
+				//idk?
+			},
+
+			namespace: "chord-fsm",
+
+			initialState: "disconnected",
+
+			states: {
+				disconnected: {
+
+				},
+
+				external: {
+
+				},
+
+				partial: {
+
+				},
+
+				full_fragile: {
+
+				},
+
+				full_stable: {
+
+				}
+			}
+		});
+	}
+
 	join(addr){
 		u.log(this, "Joining "+addr);
 
 		let chan = new BootstrapChannelClient(addr, this);
-		this.server.address = null;
+		this.server.address = addr;
 
 		return this.conductor.connectTo(this.id.idString, chan)
 			.then(
