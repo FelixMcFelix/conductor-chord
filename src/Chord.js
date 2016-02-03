@@ -209,7 +209,7 @@ class ConductorChord {
 
 	createStateMachine () {
 		this.statemachine = new machina.Fsm({
-			initialize: function (options) {
+			initialize: function(options) {
 				//idk?
 			},
 
@@ -219,24 +219,72 @@ class ConductorChord {
 
 			states: {
 				disconnected: {
-
+					node_connection(node) {
+						this.transition("external");
+					}
 				},
 
 				external: {
-
+					set_successor(node) {
+						this.transition("partial");
+					}
 				},
 
 				partial: {
+					set_predecessor(node) {
+						this.transition("full_fragile");
+					},
 
+					disconnect_successor() {
+						this.transition("external");
+					}
 				},
 
 				full_fragile: {
+					disconnect_successor() {
+						this.transition("external");
+					},
 
+					disconnect_predecessor() {
+						this.transition("partial");
+					}
 				},
 
 				full_stable: {
-
+					disconnect_predecessor() {
+						this.transition("partial");
+					}
 				}
+			},
+
+			//Known events:
+			//
+			//"node_connection" - we have obtained a connection to a new node.
+			//"set_successor" - successor has been (re)defined.
+			//"set_predecessor" - predecessor has been (re)defined.
+			//"disconnection" - used to determine the actual event to fire (in order of severity):
+			//	-> "disconnect_all"
+			//	-> "disconnect_successor"
+			//	-> "disconnect_predecessor"
+			//	-> "disconnect_backup"
+			//"connect_backup" - backup successor has been identified and connected to.
+			//
+			//Finger table modification is handled in the disconnect handler,
+			//it is noted that they do not affect the overall correctnesss of the system.
+			node_connection(node) {
+				this.handle("node_connection", node);
+			},
+
+			set_successor(node) {
+				this.handle("set_successor", node);
+			},
+
+			set_predecessor(node) {
+				this.handle("set_predecessor", node);
+			},
+
+			disconnect(node) {
+
 			}
 		});
 	}
