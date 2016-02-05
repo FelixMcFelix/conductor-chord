@@ -37,12 +37,14 @@ class Node{
 		//Improvement over std chord.
 
 		let index = this.finger.length - 1,
-			replace;
+			replace,
+			last = index;
 
 		while(index >=0){
 			replace = (index === this.finger.length-1) ? this : this.finger[index+1].node;
 
 			while(index >=0 && ID.compare(id, this.finger[index].node.id) === 0){
+				last = index;
 				this.finger[index].node = replace;
 
 				index--;
@@ -50,6 +52,8 @@ class Node{
 
 			index--;
 		}
+
+		return last;
 	}
 
 	preserveFingerInvariant(){
@@ -77,6 +81,7 @@ class Node{
 		return new Promise((resolve, reject) => {
 			let end = () => {
 				this.setFinger(0, val);
+				this.chord.statemachine.set_successor(val);
 				resolve(val);
 			}
 
@@ -107,6 +112,8 @@ class Node{
 			this.predecessor = val;
 
 			this.preserveFingerInvariant();
+
+			this.chord.statemachine.set_predecessor(val);
 
 			resolve(val);
 		});

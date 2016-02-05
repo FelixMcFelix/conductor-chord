@@ -27,7 +27,7 @@
     "machina": "^1.1.2",
     "node-forge": "^0.6.38",
     "webrtc-conductor": "git+https://github.com/FelixMcFelix/webrtc-conductor.git#dev",
-    "ws": "^0.8.0"
+    "ws": "^1.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
