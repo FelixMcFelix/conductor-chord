@@ -332,7 +332,7 @@ class ConductorChord {
 					evt = "disconnect_successor";
 
 				//Check 4: do we have ANY connections left?
-				if(Reflect.ownKeys(t.directNodes).length === 0)
+				if(Object.getOwnPropertyNames(t.directNodes).length === 0)
 					evt = "disconnect_all";
 
 				this.handle(evt, node);
