@@ -314,7 +314,7 @@ class ConductorChord {
 
 			disconnect(node) {
 				let evt = "disconnect",
-					nodeID = ID.coerceString(node.id);
+					nodeID = ID.coerceString(node.id),
 					leastFingerNo =  t.node.removeFinger(nodeID);
 
 				if(t.directNodes[nodeID])
