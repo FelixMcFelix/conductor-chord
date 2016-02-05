@@ -2,17 +2,18 @@
 
 const msg_types = require("webrtc-conductor").enums,
 	pki = require("node-forge").pki,
+	WS = require("ws"),
 	random = require("node-forge").random,
 	cipher = require("node-forge").cipher,
 	forgeUtil = require("node-forge").util,
 	u = require("./UtilFunctions.js");
 
-let WS;
-try {
-	WS = WebSocket;
-} catch (e) {
-	WS = require("ws");
-}
+// let WS;
+// try {
+// 	WS = WebSocket;
+// } catch (e) {
+// 	WS = require("ws");
+// }
 
 class BootstrapChannelClient {
 	// Single use bootstrap connection class.
