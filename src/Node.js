@@ -360,7 +360,7 @@ class Node{
 		u.log(this.chord, ID.coerceString(nPrime.id));
 
 		if(this.predecessor === null || ID.inOpenBound(nPrime.id, this.predecessor.id, this.id))
-			this.predecessor = nPrime;
+			return this.setPredecessor(nPrime);
 
 		return Promise.resolve();
 	}
