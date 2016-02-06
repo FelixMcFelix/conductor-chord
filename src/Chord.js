@@ -105,6 +105,8 @@ class ConductorChord {
 				conn.ondisconnect = evt => {
 					this.statemachine.disconnect(node);
 				};
+
+				this.statemachine.node_connection(node);
 			}
 		};
 
@@ -197,6 +199,8 @@ class ConductorChord {
 						delete this.directNodes[ID.coerceString(node.id)];
 						node.id = new ID(conn.id)
 					}
+
+					this.statemachine.node_connection(node);
 
 					resolve(node);
 				} )
