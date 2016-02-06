@@ -172,7 +172,7 @@ class RemoteCallable {
 		if(answerObj.hops)
 			this.chord.message(answerObj.returnID, ModuleRegistry.wrap(this.id, "answer", answerObj), true);
 		else
-			this.error(answerObj.returnID, answerObj.reqID, `Answer was lost - failed to route.`);
+			this.error(answerObj, `Answer was lost - failed to route.`);
 	}
 
 	bypassError (errorObj) {
