@@ -386,9 +386,16 @@ class Node{
 		u.log(this.chord, `Received message at the local node for ${id}: ${msg}
 			I am ${this.id.idString}`);
 
-		if(this.chord.server.connect && ID.compare(id, this.id)!== 0) {
-			this.chord.server.node.message(id, msg);
-		} else if (!this.predecessor && ID.compare(id, this.id)!== 0 ) {
+		if(this.chord.state === "external" && ID.compare(id, this.id)!== 0) {
+			//TODO: Proxy
+			if(this.chord.server.node.isConnected())
+				this.chord.server.node.message(id, msg);
+			else {
+				let nodeZero = Object.getOwnPropertyNames(this.chord.directNodes)[0];
+				this.chord.directNodes[nodeZero].message(id, msg);
+			}
+		} else if (this.chord.state === "partial" && ID.compare(id, this.id)!== 0 ) {
+			//TODO: Proxy
 			this.getSuccessor()
 				.then(
 					successor => successor.message(id, msg)
