@@ -231,11 +231,26 @@ class ConductorChord {
 					_onEnter() {
 						//force predecessor and all fingers to be self...
 						t.node.initOn();
+
+						if(t.config.isServer)
+							this.transition("full_server");
 					},
 
 					node_connection(node) {
 						this.transition("external");
 					}
+				},
+
+				full_server: {
+					_onEnter() {
+						//set predecessor and successor to null
+						t.node.predecessor = t.node;
+						t.node.setFinger(0, t.node);
+					},
+
+					set_successor(node) {
+						this.transition("partial");
+					},
 				},
 
 				external: {
