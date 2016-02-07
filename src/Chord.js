@@ -69,9 +69,6 @@ class ConductorChord {
 		u.log(this, "Creating local node.");
 		this.node = new Node(this);
 
-		u.log(this, "Creating state machine.");
-		this.createStateMachine();
-
 		//Create a module registry, register the RPC default module.
 		//Create file storage subsystem.
 		u.log(this, "Establishing registry, core modules...");
@@ -127,6 +124,9 @@ class ConductorChord {
 			node: null,
 			address: null
 		};
+
+		u.log(this, "Creating state machine.");
+		this.createStateMachine();
 
 		if(this.config.debug) {
 			try {
