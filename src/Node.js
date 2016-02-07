@@ -319,6 +319,9 @@ class Node{
 	stabilize(){
 		let oSucc;
 
+		if(this.chord.state === "disconnected" || this.chord.state === "external")
+			return;
+
 		u.log(this.chord, `ME:`);
 		u.log(this.chord, this.id.idString);
 
@@ -372,6 +375,9 @@ class Node{
 		let i = Math.floor(Math.random() * (this.finger.length-1) + 1);
 		//this.finger[i].node = this.findSuccessor(this.finger[i].start);
 
+		if(this.chord.state === "disconnected" || this.chord.state === "external")
+			return;
+
 		return this.findSuccessor(this.finger[i].start)
 			.then(
 				succ => this.setFinger(i, succ)//this.finger[i].node = succ
@@ -392,17 +398,27 @@ class Node{
 
 		if(this.chord.state === "external" && ID.compare(id, this.id)!== 0) {
 			//TODO: Proxy
-			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes);
+			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes)
+			chosen;
 
 			if(nodeIdList.length === 0) {
 				//Something went badly wrong, and the state machine got stuck.
 				//Help it out a little?
 				this.chord.statemachine.handle("disconnect_all");
 			} else if(this.chord.server.node && this.chord.server.node.isConnected()){
-				this.chord.server.node.message(id, msg);
+				chosen = this.chord.server.node;
 			} else {
-				this.chord.directNodes[nodeIdList[0]].message(id, msg);
+				chosen = this.chord.directNodes[nodeIdList[0]];
 			}
+
+			if(chosen) {
+				chosen.message(id, msg);
+				this.stableJoin(chosen)
+					.then(
+						() => {return this.node.stabilize();}
+					);
+			}
+
 		} else if (this.chord.state === "partial" && ID.compare(id, this.id)!== 0 ) {
 			//TODO: Proxy
 			this.getSuccessor()
