@@ -386,13 +386,20 @@ class Node{
 		u.log(this.chord, `Received message at the local node for ${id}: ${msg}
 			I am ${this.id.idString}`);
 
+		u.log(this.chord, `!!! STATE: ${this.chord.state} !!!`)
+
 		if(this.chord.state === "external" && ID.compare(id, this.id)!== 0) {
 			//TODO: Proxy
-			if(this.chord.server.node.isConnected())
+			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes);
+
+			if(nodeIdList.length === 0) {
+				//Something went badly wrong, and the state machine got stuck.
+				//Help it out a little?
+				this.chord.statemachine.handle("disconnect_all");
+			} else if(this.chord.server.node && this.chord.server.node.isConnected()){
 				this.chord.server.node.message(id, msg);
-			else {
-				let nodeZero = Object.getOwnPropertyNames(this.chord.directNodes)[0];
-				this.chord.directNodes[nodeZero].message(id, msg);
+			} else {
+				this.chord.directNodes[nodeIdList[0]].message(id, msg);
 			}
 		} else if (this.chord.state === "partial" && ID.compare(id, this.id)!== 0 ) {
 			//TODO: Proxy
