@@ -128,14 +128,16 @@ class Node{
 					return this.updateOthers();
 				} )
 				.then( () => {
-					this.chord.server.connect = false;
+					if(!this.chord.server.node || !this.chord.server.node.isConnected())
+						this.chord.server.connect = false;
 				} );
 			//move keys from successor to self as well.
 		} else {
-			for(var i=0; i<chord.config.idwidth; i++)
+			for(var i=0; i<this.chord.config.idwidth; i++)
 				this.finger[i].node = this;
 			this.predecessor = this;
-			this.chord.server.connect = false;
+			if(!this.chord.server.node || !this.chord.server.node.isConnected())
+				this.chord.server.connect = false;
 			return Promise.resolve();
 		}
 
