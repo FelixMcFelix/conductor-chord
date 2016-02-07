@@ -398,8 +398,8 @@ class Node{
 
 		if(this.chord.state === "external" && ID.compare(id, this.id)!== 0) {
 			//TODO: Proxy
-			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes)
-			chosen;
+			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes),
+				chosen;
 
 			if(nodeIdList.length === 0) {
 				//Something went badly wrong, and the state machine got stuck.
