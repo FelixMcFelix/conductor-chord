@@ -230,7 +230,7 @@ class ConductorChord {
 				disconnected: { 
 					_onEnter() {
 						//force predecessor and all fingers to be self...
-						this.node.initOn();
+						t.node.initOn();
 					},
 
 					node_connection(node) {
