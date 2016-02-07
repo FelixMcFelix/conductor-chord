@@ -227,13 +227,24 @@ class ConductorChord {
 			initialState: "disconnected",
 
 			states: {
-				disconnected: {
+				disconnected: { 
+					_onEnter() {
+						//force predecessor and all fingers to be self...
+						this.node.initOn();
+					},
+
 					node_connection(node) {
 						this.transition("external");
 					}
 				},
 
 				external: {
+					_onEnter() {
+						//set predecessor and successor to null
+						t.node.predecessor = null;
+						t.node.finger[0].node = null;
+					},
+
 					set_successor(node) {
 						this.transition("partial");
 					},
@@ -244,6 +255,14 @@ class ConductorChord {
 				},
 
 				partial: {
+					_onEnter() {
+						//The server can be told about its predecessor BEFORE it knows it has a successor.
+						//Check for this, and move if needed.
+
+						if(t.node.predecessor)
+							this.set_predecessor(t.node.predecessor);
+					},
+
 					set_predecessor(node) {
 						this.transition("full_fragile");
 					},
@@ -328,12 +347,15 @@ class ConductorChord {
 				//TODO
 
 				//Check 2: was it our predecessor?
-				if(ID.coerceString(t.node.predecessor.id) === nodeID)
+				if(ID.coerceString(t.node.predecessor.id) === nodeID){
 					evt = "disconnect_predecessor";
+					t.node.predecessor = null;
+				}
 
 				//Check 3: was it our successor?
 				if(leastFingerNo === 0)
 					evt = "disconnect_successor";
+				
 
 				//Check 4: do we have ANY connections left?
 				if(Object.getOwnPropertyNames(t.directNodes).length === 0)
