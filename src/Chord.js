@@ -256,8 +256,8 @@ class ConductorChord {
 				external: {
 					_onEnter() {
 						//set predecessor and successor to null
-						t.node.predecessor = null;
-						t.node.finger[0].node = null;
+						t.node.predecessor = t.node;
+						t.node.setFinger(0, t.node);
 					},
 
 					set_successor(node) {
@@ -362,7 +362,7 @@ class ConductorChord {
 				//TODO
 
 				//Check 2: was it our predecessor?
-				if(ID.coerceString(t.node.predecessor.id) === nodeID){
+				if(!t.node.predecessor || ID.coerceString(t.node.predecessor.id) === nodeID){
 					evt = "disconnect_predecessor";
 					t.node.predecessor = null;
 				}
