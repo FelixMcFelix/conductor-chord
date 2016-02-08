@@ -264,6 +264,10 @@ class ConductorChord {
 						this.transition("partial");
 					},
 
+					// set_predecessor(node) {
+					// 	if(t.node.finger[0].node )
+					// }
+
 					disconnect_all() {
 						this.transition("disconnected");
 					}
@@ -360,6 +364,8 @@ class ConductorChord {
 
 				//Check 1: was it a backup?
 				//TODO
+
+				// debugger;
 
 				//Check 2: was it our predecessor?
 				if(!t.node.predecessor || ID.coerceString(t.node.predecessor.id) === nodeID){

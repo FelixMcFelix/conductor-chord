@@ -93,6 +93,11 @@ class RemoteNode {
 	message(id, msg){
 		if(this.isConnected())
 			this.connection.send(JSON.stringify({id, data: msg}));
+		// else if (this.connection) {
+		// 	//we were connected - but now we are not...
+		// 	//delay the resend to give the state machine a chance to update
+		// 	setTimeout(() => this.chord.message(id, msg), 25);
+		// } 
 		else {
 			console.log(`Creating new connection to ${id} - none found or not open.`);
 

@@ -319,8 +319,8 @@ class Node{
 	stabilize(){
 		let oSucc;
 
-		if(this.chord.state === "disconnected" || this.chord.state === "external")
-			return;
+		// if(this.chord.state === "disconnected" || this.chord.state === "external")
+		// 	return;
 
 		u.log(this.chord, `ME:`);
 		u.log(this.chord, this.id.idString);
@@ -336,10 +336,12 @@ class Node{
 				u.log(this.chord, `MY SUCCESSOR'S PREDECESSOR:`);
 				u.log(this.chord, (pred) ? pred.id.idString : pred);
 
-				u.log(this.chord, `x: ${ID.coerceString(pred.id)}`);
-				u.log(this.chord, `LB: ${ID.coerceString(this.id)}`);
-				u.log(this.chord, `UB: ${ID.coerceString(oSucc.id)}`);
-				u.log(this.chord, `x in (UB, LB): ${ID.inOpenBound(pred.id, this.id, oSucc.id)}`);
+				if(pred){
+					u.log(this.chord, `x: ${ID.coerceString(pred.id)}`);
+					u.log(this.chord, `LB: ${ID.coerceString(this.id)}`);
+					u.log(this.chord, `UB: ${ID.coerceString(oSucc.id)}`);
+					u.log(this.chord, `x in (UB, LB): ${ID.inOpenBound(pred.id, this.id, oSucc.id)}`);
+				}
 
 				if(pred && ID.inOpenBound(pred.id, this.id, oSucc.id)) {
 					u.log(this.chord, `NEW SUCCESSOR FOUND`);
@@ -353,6 +355,7 @@ class Node{
 				res => {
 					u.log(this.chord, `NOTIFYING SUCCESSOR ABOUT:`);
 					u.log(this.chord, this.id.idString);
+
 					return oSucc.notify(this);
 				}
 			)
@@ -413,10 +416,6 @@ class Node{
 
 			if(chosen) {
 				chosen.message(id, msg);
-				this.stableJoin(chosen)
-					.then(
-						() => {return this.node.stabilize();}
-					);
 			}
 
 		} else if (this.chord.state === "partial" && ID.compare(id, this.id)!== 0 ) {
@@ -454,7 +453,6 @@ class Node{
 
 		return false;
 	}
-
 }
 
 module.exports = Node;
