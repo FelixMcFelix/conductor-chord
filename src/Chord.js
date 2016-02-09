@@ -12,6 +12,7 @@ const u = require("./UtilFunctions.js"),
 	ID = require("./ID.js"),
 	sha3 = require("js-sha3"),
 	pki = require("node-forge").pki,
+	machina = require('machina'),
 	Conductor = require("webrtc-conductor");
 
 
@@ -93,9 +94,16 @@ class ConductorChord {
 					let parsy = JSON.parse(msg.data);
 					this.message(parsy.id, parsy.data)
 				};
+
 				let node = this.obtainRemoteNode(conn.id);
 				node.connection = conn; 
 				this.directNodes[conn.id] = node;
+
+				conn.ondisconnect = evt => {
+					this.statemachine.disconnect(node);
+				};
+
+				this.statemachine.node_connection(node);
 			}
 		};
 
@@ -116,6 +124,9 @@ class ConductorChord {
 			node: null,
 			address: null
 		};
+
+		u.log(this, "Creating state machine.");
+		this.createStateMachine();
 
 		if(this.config.debug) {
 			try {
@@ -179,9 +190,7 @@ class ConductorChord {
 					});
 
 					conn.ondisconnect = evt => {
-						this.node.removeFinger(conn.id);
-						if(this.directNodes[conn.id])
-							delete this.directNodes[conn.id];
+						this.statemachine.disconnect(node);
 					};
 
 					this.directNodes[conn.id] = node;
@@ -191,17 +200,202 @@ class ConductorChord {
 						node.id = new ID(conn.id)
 					}
 
+					this.statemachine.node_connection(node);
+
 					resolve(node);
 				} )
 				.catch( reason => reject(reason) );
 		} );
 	}
 
+	get state () {
+		if(this.statemachine)
+			return this.statemachine.state;
+		return "disconnected";
+	}
+
+	createStateMachine () {
+		let t = this;
+
+		this.statemachine = new machina.Fsm({
+			initialize: function(options) {
+				//idk?
+			},
+
+			namespace: "chord-fsm",
+
+			initialState: "disconnected",
+
+			states: {
+				disconnected: { 
+					_onEnter() {
+						//force predecessor and all fingers to be self...
+						t.node.initOn();
+
+						if(t.config.isServer)
+							this.transition("full_server");
+					},
+
+					node_connection(node) {
+						this.transition("external");
+					}
+				},
+
+				full_server: {
+					_onEnter() {
+						//set predecessor and successor to null
+						t.node.predecessor = t.node;
+						t.node.setFinger(0, t.node);
+					},
+
+					set_successor(node) {
+						this.transition("partial");
+					},
+				},
+
+				external: {
+					_onEnter() {
+						//set predecessor and successor to null
+						t.node.predecessor = t.node;
+						t.node.setFinger(0, t.node);
+					},
+
+					set_successor(node) {
+						this.transition("partial");
+					},
+
+					// set_predecessor(node) {
+					// 	if(t.node.finger[0].node )
+					// }
+
+					disconnect_all() {
+						this.transition("disconnected");
+					}
+				},
+
+				partial: {
+					_onEnter() {
+						//The server can be told about its predecessor BEFORE it knows it has a successor.
+						//Check for this, and move if needed.
+
+						if(t.node.predecessor)
+							this.set_predecessor(t.node.predecessor);
+					},
+
+					set_predecessor(node) {
+						this.transition("full_fragile");
+					},
+
+					disconnect_successor() {
+						this.transition("external");
+					},
+
+					disconnect_all() {
+						this.transition("disconnected");
+					}
+				},
+
+				full_fragile: {
+					_onEnter() {
+						//Check for current status of successor list, if required.
+						//TODO
+					},
+
+					disconnect_successor() {
+						this.transition("external");
+					},
+
+					disconnect_predecessor() {
+						this.transition("partial");
+					},
+
+					disconnect_all() {
+						this.transition("disconnected");
+					}
+				},
+
+				full_stable: {
+					//IGNORE THIS STATE FOR NOW!
+					//Deal with it once 
+					disconnect_predecessor() {
+						this.transition("partial");
+					},
+
+					disconnect_all() {
+						this.transition("disconnected");
+					}
+				}
+			},
+
+			//Known events:
+			//
+			//"node_connection" - we have obtained a connection to a new node.
+			//"set_successor" - successor has been (re)defined.
+			//"set_predecessor" - predecessor has been (re)defined.
+			//"disconnection" - used to determine the actual event to fire (in order of severity):
+			//	-> "disconnect_all"
+			//	-> "disconnect_successor"
+			//	-> "disconnect_predecessor"
+			//	-> "disconnect_backup"
+			//	-> "disconnect"
+			//"connect_backup" - backup successor has been identified and connected to.
+			//
+			//Finger table modification is handled in the disconnect handler,
+			//it is noted that they do not affect the overall correctnesss of the system.
+			node_connection(node) {
+				this.handle("node_connection", node);
+			},
+
+			set_successor(node) {
+				this.handle("set_successor", node);
+			},
+
+			set_predecessor(node) {
+				this.handle("set_predecessor", node);
+			},
+
+			disconnect(node) {
+				let evt = "disconnect",
+					nodeID = ID.coerceString(node.id),
+					leastFingerNo =  t.node.removeFinger(nodeID);
+
+				if(t.directNodes[nodeID])
+					delete t.directNodes[nodeID];
+
+				//Check 1: was it a backup?
+				//TODO
+
+				// debugger;
+
+				//Check 2: was it our predecessor?
+				if(!t.node.predecessor || ID.coerceString(t.node.predecessor.id) === nodeID){
+					evt = "disconnect_predecessor";
+					t.node.predecessor = null;
+				}
+
+				//Check 3: was it our successor?
+				if(leastFingerNo === 0)
+					evt = "disconnect_successor";
+				
+
+				//Check 4: do we have ANY connections left?
+				if(Object.getOwnPropertyNames(t.directNodes).length === 0)
+					evt = "disconnect_all";
+
+				this.handle(evt, node);
+			},
+
+			connect_backup(node) {
+				this.handle("connect_backup", node);
+			}
+		});
+	}
+
 	join(addr){
 		u.log(this, "Joining "+addr);
 
 		let chan = new BootstrapChannelClient(addr, this);
-		this.server.address = null;
+		this.server.address = addr;
 
 		return this.conductor.connectTo(this.id.idString, chan)
 			.then(
@@ -212,17 +406,17 @@ class ConductorChord {
 						this.message(parsy.id, parsy.data);
 					});
 
-					result.ondisconnect = evt => {
-						this.node.removeFinger(result.id);
-						if(this.directNodes[result.id])
-							delete this.directNodes[result.id];
-					};
-
 					let srvNode = new RemoteNode(this, new ID(result.id), result);
+
+					result.ondisconnect = evt => {
+						this.statemachine.disconnect(srvNode);
+					};
 
 					this.server.node = srvNode;
 					this.directNodes[result.id] = srvNode;
 					this.knownNodes[result.id] = srvNode;
+
+					this.statemachine.node_connection(srvNode);
 
 					return this.node.stableJoin(srvNode)
 						.then(

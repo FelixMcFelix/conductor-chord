@@ -37,12 +37,14 @@ class Node{
 		//Improvement over std chord.
 
 		let index = this.finger.length - 1,
-			replace;
+			replace,
+			last = index;
 
 		while(index >=0){
 			replace = (index === this.finger.length-1) ? this : this.finger[index+1].node;
 
 			while(index >=0 && ID.compare(id, this.finger[index].node.id) === 0){
+				last = index;
 				this.finger[index].node = replace;
 
 				index--;
@@ -50,6 +52,8 @@ class Node{
 
 			index--;
 		}
+
+		return last;
 	}
 
 	preserveFingerInvariant(){
@@ -77,6 +81,7 @@ class Node{
 		return new Promise((resolve, reject) => {
 			let end = () => {
 				this.setFinger(0, val);
+				this.chord.statemachine.set_successor(val);
 				resolve(val);
 			}
 
@@ -108,6 +113,8 @@ class Node{
 
 			this.preserveFingerInvariant();
 
+			this.chord.statemachine.set_predecessor(val);
+
 			resolve(val);
 		});
 	}
@@ -121,14 +128,16 @@ class Node{
 					return this.updateOthers();
 				} )
 				.then( () => {
-					this.chord.server.connect = false;
+					if(!this.chord.server.node || !this.chord.server.node.isConnected())
+						this.chord.server.connect = false;
 				} );
 			//move keys from successor to self as well.
 		} else {
-			for(var i=0; i<chord.config.idwidth; i++)
+			for(var i=0; i<this.chord.config.idwidth; i++)
 				this.finger[i].node = this;
 			this.predecessor = this;
-			this.chord.server.connect = false;
+			if(!this.chord.server.node || !this.chord.server.node.isConnected())
+				this.chord.server.connect = false;
 			return Promise.resolve();
 		}
 
@@ -310,6 +319,9 @@ class Node{
 	stabilize(){
 		let oSucc;
 
+		// if(this.chord.state === "disconnected" || this.chord.state === "external")
+		// 	return;
+
 		u.log(this.chord, `ME:`);
 		u.log(this.chord, this.id.idString);
 
@@ -324,10 +336,12 @@ class Node{
 				u.log(this.chord, `MY SUCCESSOR'S PREDECESSOR:`);
 				u.log(this.chord, (pred) ? pred.id.idString : pred);
 
-				u.log(this.chord, `x: ${ID.coerceString(pred.id)}`);
-				u.log(this.chord, `LB: ${ID.coerceString(this.id)}`);
-				u.log(this.chord, `UB: ${ID.coerceString(oSucc.id)}`);
-				u.log(this.chord, `x in (UB, LB): ${ID.inOpenBound(pred.id, this.id, oSucc.id)}`);
+				if(pred){
+					u.log(this.chord, `x: ${ID.coerceString(pred.id)}`);
+					u.log(this.chord, `LB: ${ID.coerceString(this.id)}`);
+					u.log(this.chord, `UB: ${ID.coerceString(oSucc.id)}`);
+					u.log(this.chord, `x in (UB, LB): ${ID.inOpenBound(pred.id, this.id, oSucc.id)}`);
+				}
 
 				if(pred && ID.inOpenBound(pred.id, this.id, oSucc.id)) {
 					u.log(this.chord, `NEW SUCCESSOR FOUND`);
@@ -341,6 +355,7 @@ class Node{
 				res => {
 					u.log(this.chord, `NOTIFYING SUCCESSOR ABOUT:`);
 					u.log(this.chord, this.id.idString);
+
 					return oSucc.notify(this);
 				}
 			)
@@ -353,7 +368,7 @@ class Node{
 		u.log(this.chord, ID.coerceString(nPrime.id));
 
 		if(this.predecessor === null || ID.inOpenBound(nPrime.id, this.predecessor.id, this.id))
-			this.predecessor = nPrime;
+			return this.setPredecessor(nPrime);
 
 		return Promise.resolve();
 	}
@@ -362,6 +377,9 @@ class Node{
 	fixFingers(){
 		let i = Math.floor(Math.random() * (this.finger.length-1) + 1);
 		//this.finger[i].node = this.findSuccessor(this.finger[i].start);
+
+		if(this.chord.state === "disconnected" || this.chord.state === "external")
+			return;
 
 		return this.findSuccessor(this.finger[i].start)
 			.then(
@@ -379,9 +397,29 @@ class Node{
 		u.log(this.chord, `Received message at the local node for ${id}: ${msg}
 			I am ${this.id.idString}`);
 
-		if(this.chord.server.connect && ID.compare(id, this.id)!== 0) {
-			this.chord.server.node.message(id, msg);
-		} else if (!this.predecessor && ID.compare(id, this.id)!== 0 ) {
+		u.log(this.chord, `!!! STATE: ${this.chord.state} !!!`)
+
+		if(this.chord.state === "external" && ID.compare(id, this.id)!== 0) {
+			//TODO: Proxy
+			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes),
+				chosen;
+
+			if(nodeIdList.length === 0) {
+				//Something went badly wrong, and the state machine got stuck.
+				//Help it out a little?
+				this.chord.statemachine.handle("disconnect_all");
+			} else if(this.chord.server.node && this.chord.server.node.isConnected()){
+				chosen = this.chord.server.node;
+			} else {
+				chosen = this.chord.directNodes[nodeIdList[0]];
+			}
+
+			if(chosen) {
+				chosen.message(id, msg);
+			}
+
+		} else if (this.chord.state === "partial" && ID.compare(id, this.id)!== 0 ) {
+			//TODO: Proxy
 			this.getSuccessor()
 				.then(
 					successor => successor.message(id, msg)
@@ -415,7 +453,6 @@ class Node{
 
 		return false;
 	}
-
 }
 
 module.exports = Node;

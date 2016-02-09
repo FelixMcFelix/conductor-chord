@@ -429,7 +429,7 @@ class ChordSignalChannel{
 			directNodeNames = Object.getOwnPropertyNames(this.chord.directNodes),
 			chosen;
 
-		if(successor && (typeof successor == "RemoteNode") && successor.isConnected()) {
+		if(this.chord.state === "partial" || this.chord.state.substring(0,4) === "full") {
 			chosen = successor;
 		} else if (server && server.isConnected()) {
 			chosen = server;

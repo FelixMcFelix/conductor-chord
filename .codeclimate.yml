@@ -14,3 +14,4 @@ exclude_paths:
 - lib/*
 - web_modules/**/*
 - web_modules/*
+- "lib/StringView.js"
