@@ -9,9 +9,9 @@ const TYPE_MSG = 0,
 
 		}
 	},
-	validation_func = {
+	out_func = {
 		"00": message => {
-			
+
 		}
 	};
 
@@ -22,7 +22,17 @@ class MessageParser {
 	}
 
 	parseMessage (string) {
+		//Read version.
+		let version = string.substring(0,2);
 
+		//Is version valid?
+		if (version.length < 2 || !parse_func[version])
+			return null;
+
+		//Parse the packet using its version.
+		//TODO
+
+		//Was reading the packet successful?
 	}
 }
 
