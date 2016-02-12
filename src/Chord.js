@@ -7,6 +7,8 @@ const u = require("./UtilFunctions.js"),
 	ModuleRegistry = require("./ModuleRegistry.js"),
 	RemoteCallModule = require("./RemoteCallModule.js"),
 	FileStore = require("./FileStore.js"),
+	MessageCore = require("./MessageCore.js"),
+	Message = require("./Message.js"),
 	Node = require("./Node.js"),
 	RemoteNode = require("./RemoteNode.js"),
 	ID = require("./ID.js"),
@@ -28,6 +30,8 @@ class ConductorChord {
 				retries: 2,
 				cacheAnswerDuration: 20000
 			},
+
+			messageMaxHops: 448,
 
 			serverConfig: {
 				port: 7171
@@ -75,6 +79,7 @@ class ConductorChord {
 		this.registry = new ModuleRegistry();
 		this.rcm = new RemoteCallModule(this);
 		this.fileStore = new FileStore(this);
+		this.messageCore = new MessageCore(this);
 
 		//Store the K,V pair <ID, pubKey> on the local view of the DHT.
 		//This will be relocated once an actual network is joined.
@@ -458,6 +463,10 @@ class ConductorChord {
 
 	registerModule(module){
 		this.registry.register(module);
+	}
+
+	newMessage (module, handler, data, dest) {
+		return new Message(this, 0, {src: this.id, dest, module, handler, data, hops: this.config.messageMaxHops});
 	}
 }
 

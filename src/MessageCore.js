@@ -6,17 +6,37 @@ const TYPE_MSG = 0,
 	TYPE_PROXY = 1,
 	parse_func = {
 		"00": text => {
+			let obj = JSON.parse(text);
 
+			return new Message(this.chord, obj.t, {
+				src: obj.s,
+				dest: obj.d,
+				module: obj.m,
+				handler: obj.h,
+				data: obj.D,
+				proxy: obj.p,
+				hops: obj.H,
+				version: "00"
+			});
 		}
 	},
 	out_func = {
 		"00": message => {
-
+			return "00" + JSON.parse({
+				s: message.src,
+				d: message.dest,
+				m: message.module,
+				h: message.handler,
+				D: message.data,
+				p: message.proxy,
+				t: message.type,
+				H: message.hops
+			});
 		}
 	};
 
 
-class MessageParser {
+class MessageCore {
 	constructor (chord) {
 		this.chord = chord;
 	}
@@ -30,10 +50,34 @@ class MessageParser {
 			return null;
 
 		//Parse the packet using its version.
-		//TODO
+		try {
+			return parse_func[version](string.substr(2));
+		} catch (e) {
+			return null;
+		}
+	}
 
-		//Was reading the packet successful?
+	handleMessage (message) {
+		switch (message.type) {
+			case TYPE_MSG:
+				this.chord.registry.parse(msg);
+				break;
+			case TYPE_PROXY:
+				let internalMsg = this.parseMessage(message.data);
+
+				internalMsg.proxy = message.dest;
+
+				this.chord.message(internalMsg);
+				break;
+		}
+	}
+
+	encodeMessage (message) {
+		if(out_func[message.type])
+			return out_func[message.type](message);
+
+		return out_func["00"](message);	
 	}
 }
 
-module.exports = MessageParser;
+module.exports = MessageCore;
