@@ -208,7 +208,7 @@ class ChordSignalChannel{
 
 		entry.status = HSHAKE_SENT;
 
-		this.message("key-shake-init", ModuleRegistry.wrap({pub: pub: this.chord.pubKeyPem}), id);
+		this.message("key-shake-init", ModuleRegistry.wrap({pub: this.chord.pubKeyPem}), id);
 	}
 
 	recvHandshakeInit(message){
