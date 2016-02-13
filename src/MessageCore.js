@@ -72,6 +72,26 @@ class MessageCore {
 		}
 	}
 
+	makeProxyMessage (message, proxyId) {
+		let encMsg = this.encodeMessage(message),
+			proxyData = {
+				data: encMsg,
+				src: message.src,
+				dest: proxyId,
+				hops: this.chord.config.messageMaxHops,
+				version: message.version
+			};
+			
+			return new Message(this.chord, 1, proxyData);
+	}
+
+	sendProxyMessage (message, proxyID) {
+		let m = this.makeProxyMessage(message, proxyID);
+
+		if(m)
+			this.chord.message(m);
+	}
+
 	encodeMessage (message) {
 		if(out_func[message.type])
 			return out_func[message.type](message);

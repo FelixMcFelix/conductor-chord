@@ -90,20 +90,15 @@ class RemoteNode {
 
 	//Custom
 
-	message(id, msg){
+	message(msg){
 		if(this.isConnected())
-			this.connection.send(JSON.stringify({id, data: msg}));
-		// else if (this.connection) {
-		// 	//we were connected - but now we are not...
-		// 	//delay the resend to give the state machine a chance to update
-		// 	setTimeout(() => this.chord.message(id, msg), 25);
-		// } 
+			this.connection.send(this.chord.messageCore.encodeMessage(msg)));
 		else {
 			console.log(`Creating new connection to ${id} - none found or not open.`);
 
 			this.chord.smartConnectToNode(this.id, this)
 				.then(node => {
-					this.chord.message(id, msg);
+					this.chord.message(msg);
 				},
 				reason => {
 					console.log("Failed to create new connection to remote node.")

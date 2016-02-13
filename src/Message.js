@@ -30,15 +30,19 @@ class Message {
 	}
 
 	reply (message) {
-		//TODO
 		if(this.proxy){
-			message = new Message(this.chord, 1, message)
+			message = this.chord.messageCore.makeProxyMessage(message, this.proxy);
 		}
 
 		this.chord.message(message);
 	}
 
-	set src(val) {
+	pass () {
+		this.bypass = true;
+		this.chord.message(this);
+	}
+
+	set src (val) {
 		this._src = ID.coerceString(val);
 	}
 
@@ -46,7 +50,7 @@ class Message {
 		return this._src;
 	}
 
-	set dest(val) {
+	set dest (val) {
 		this._dest = ID.coerceString(val);
 	}
 
@@ -54,7 +58,7 @@ class Message {
 		return this._dest;
 	}
 
-	set proxy(val) {
+	set proxy (val) {
 		this._proxy = ID.coerceString(val);
 	}
 
