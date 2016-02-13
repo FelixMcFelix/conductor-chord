@@ -13,24 +13,21 @@ class ModuleRegistry {
 	}
 
 	parse(message){
-		let obj = ModuleRegistry.unwrap(message);
+		if(message.module && this.registry[message.module]){
+			//unwrap the message's data...
+			try{
+				message.data = ModuleRegistry.unwrap(message.data);
+			} catch (e) {}
 
-		console.log(`Received message at the registry: ${message}`);
-
-		if(obj.m != null)
-			this.registry[obj.m].delegate(obj.h, obj.o);		
+			this.registry[message.module].delegate(message);
+		}
 	}
 
-	static wrap(module, handler, msg){
-		//TODO: Find a better way to do this.
-		return JSON.stringify({
-			m: module,
-			h: handler,
-			o: msg
-		});
+	static wrap(data){
+		return JSON.stringify(data);
 	}
 
-	static unwrap(msg){
+	static unwrap(data){
 		return JSON.parse(msg);
 	}
 }

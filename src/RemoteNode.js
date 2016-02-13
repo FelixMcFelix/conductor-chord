@@ -92,7 +92,7 @@ class RemoteNode {
 
 	message(msg){
 		if(this.isConnected())
-			this.connection.send(this.chord.messageCore.encodeMessage(msg)));
+			this.connection.send(this.chord.messageCore.encodeMessage(msg));
 		else {
 			console.log(`Creating new connection to ${id} - none found or not open.`);
 
