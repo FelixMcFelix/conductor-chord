@@ -5,7 +5,7 @@ const Message = require("./Message.js");
 const TYPE_MSG = 0,
 	TYPE_PROXY = 1,
 	parse_func = {
-		"00": text => {
+		"00": (text, chord) => {
 			let obj = JSON.parse(text);
 
 			return new Message(this.chord, obj.t, {
@@ -51,7 +51,7 @@ class MessageCore {
 
 		//Parse the packet using its version.
 		try {
-			return parse_func[version](string.substr(2));
+			return parse_func[version](string.substr(2), this.chord);
 		} catch (e) {
 			return null;
 		}
