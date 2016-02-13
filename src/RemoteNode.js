@@ -94,7 +94,7 @@ class RemoteNode {
 		if(this.isConnected())
 			this.connection.send(this.chord.messageCore.encodeMessage(msg));
 		else {
-			console.log(`Creating new connection to ${id} - none found or not open.`);
+			console.log(`Creating new connection to ${ID.coerceString(this.id)} - none found or not open.`);
 
 			this.chord.smartConnectToNode(this.id, this)
 				.then(node => {
