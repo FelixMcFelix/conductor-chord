@@ -172,19 +172,19 @@ class RemoteCallable {
 		message.reply(this.chord.newMessage(this.id, "error", ModuleRegistry.wrap({reqID, reason, _remoteNo, hops: 10}), returnID));
 	}
 
-	bypassAnswer (answerObj) {
-		answerObj.data.hops--;
-		if(answerObj.hops){
+	bypassAnswer (message) {
+		message.data.hops--;
+		if(message.hops){
 			message.data = ModuleRegistry.wrap(message.data);
 			message.pass();
 		} else {
-			this.error(answerObj, `Answer was lost - failed to route.`);
+			this.error(message, `Answer was lost - failed to route.`);
 		}
 	}
 
-	bypassError (errorObj) {
-		errorObj.data.hops--;
-		if(errorObj.hops){
+	bypassError (message) {
+		message.data.hops--;
+		if(message.hops){
 			message.data = ModuleRegistry.wrap(message.data);
 			message.pass();
 		}

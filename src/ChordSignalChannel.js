@@ -75,19 +75,19 @@ class ChordSignalChannel{
 				u.log(this.chord, `SDP offer from ${out.id}`);
 
 				out.type = msg_types.RESPONSE_SDP_OFFER;
-				out.data = msg.sdp;
+				out.data = msg.data.sdp;
 				break;
 			case "sdp-answer":
 				u.log(this.chord, `SDP answer from ${out.id}`);
 
 				out.type = msg_types.RESPONSE_SDP_ANSWER;
-				out.data = msg.sdp;
+				out.data = msg.data.sdp;
 				break;
 			case "ice":
 				u.log(this.chord, `ICE candidate from ${out.id}`);
 
 				out.type = msg_types.RESPONSE_ICE;
-				out.data = msg.ice;
+				out.data = msg.data.ice;
 				break;
 			default:
 				u.log(this.chord, `Misc message from: ${out.id}`);
@@ -96,7 +96,7 @@ class ChordSignalChannel{
 				break;
 		}
 
-		out.id = msg.id;
+		out.id = msg.src;
 
 		return out;
 	}
