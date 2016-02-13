@@ -236,7 +236,7 @@ class ChordSignalChannel{
 		);
 
 		try {
-			this.chord.conductor.renameConnection(message.data.origID, message.src);
+			this.chord.conductor.renameConnection(message.data.origId, message.src);
 		} finally {
 			this.clearActionQueue(entry);
 		}
