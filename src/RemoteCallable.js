@@ -174,7 +174,7 @@ class RemoteCallable {
 
 	bypassAnswer (message) {
 		message.data.hops--;
-		if(message.hops){
+		if(message.data.hops > 0){
 			message.data = ModuleRegistry.wrap(message.data);
 			message.pass();
 		} else {
@@ -184,7 +184,7 @@ class RemoteCallable {
 
 	bypassError (message) {
 		message.data.hops--;
-		if(message.hops){
+		if(message.data.hops > 0){
 			message.data = ModuleRegistry.wrap(message.data);
 			message.pass();
 		}
