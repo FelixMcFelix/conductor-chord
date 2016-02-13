@@ -48,8 +48,7 @@ class RemoteCallable {
 	}
 
 	delegate (message) {
-		let handler = message.handler,
-			handled = true;
+		let handled = true;
 
 		switch (message.handler) {
 			case "answer":

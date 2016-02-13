@@ -16,7 +16,7 @@ class FileStore extends RemoteCallable {
 		if(super.delegate(message))
 			return;
 
-		switch (handler) {
+		switch (message.handler) {
 			case "store":
 				this.store(message.data.params[0], message.data.params[1])
 					.then(

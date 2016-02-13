@@ -14,7 +14,7 @@ class RemoteCallModule extends RemoteCallable {
 		if(super.delegate(message))
 			return;
 
-		switch(handler){
+		switch(message.handler){
 			case "getSuccessor":
 				this.chord.node.getSuccessor()
 					.then(
