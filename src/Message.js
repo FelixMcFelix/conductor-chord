@@ -8,7 +8,7 @@ class Message {
 		this.type = type;
 
 		for(let name in properties)
-			if(properties.hasOwnProperty(name) && !this[name]) this[name] = properties[name];
+			if(properties.hasOwnProperty(name) && properties[name]!==undefined && !this[name]) this[name] = properties[name];
 
 		//Validate
 		if (!(this.src && this.dest && this.data && this.hops))
