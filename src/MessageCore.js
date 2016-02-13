@@ -8,7 +8,7 @@ const TYPE_MSG = 0,
 		"00": (text, chord) => {
 			let obj = JSON.parse(text);
 
-			return new Message(this.chord, obj.t, {
+			return new Message(chord, obj.t, {
 				src: obj.s,
 				dest: obj.d,
 				module: obj.m,
