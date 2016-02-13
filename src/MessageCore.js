@@ -60,7 +60,7 @@ class MessageCore {
 	handleMessage (message) {
 		switch (message.type) {
 			case TYPE_MSG:
-				this.chord.registry.parse(msg);
+				this.chord.registry.parse(message);
 				break;
 			case TYPE_PROXY:
 				let internalMsg = this.parseMessage(message.data);
