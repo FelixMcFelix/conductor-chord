@@ -227,16 +227,16 @@ class ChordSignalChannel{
 
 	recvHandshakeReply(message){
 		//Message has: origId, pub, encKey.
-		u.log(this.chord, `Received handshake reply from ${message.src}: true ID ${message.id}.`);
+		u.log(this.chord, `Received handshake reply from ${message.data.origId}: true ID ${message.src}.`);
 
-		let entry = this.finishEntry(message.data.origID,
+		let entry = this.finishEntry(message.data.origId,
 			message.data.pub,
 			message.src,
 			this.chord.key.privateKey.decrypt(message.data.encKey, "RSA-OAEP")
 		);
 
 		try {
-			this.chord.conductor.renameConnection(message.origID, message.id);
+			this.chord.conductor.renameConnection(message.data.origID, message.src);
 		} finally {
 			this.clearActionQueue(entry);
 		}
