@@ -22,7 +22,7 @@ const TYPE_MSG = 0,
 	},
 	out_func = {
 		"00": message => {
-			return "00" + JSON.parse({
+			return "00" + JSON.stringify({
 				s: message.src,
 				d: message.dest,
 				m: message.module,
