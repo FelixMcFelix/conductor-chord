@@ -28,7 +28,7 @@ class ModuleRegistry {
 	}
 
 	static unwrap(data){
-		return JSON.parse(msg);
+		return JSON.parse(data);
 	}
 }
 
