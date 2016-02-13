@@ -423,7 +423,7 @@ class Node{
 			this.chord.messageCore.handleMessage(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.closestPrecedingFinger(id)
+			this.closestPrecedingFinger(msg.dest)
 			.then(
 				dest => {
 					if(dest===this){
