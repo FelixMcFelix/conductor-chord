@@ -10,8 +10,8 @@ class RemoteCallModule extends RemoteCallable {
 		chord.registerModule(this);
 	}
 
-	delegate (handler, message) {
-		if(super.delegate(handler, message))
+	delegate (message) {
+		if(super.delegate(message))
 			return;
 
 		switch(handler){
