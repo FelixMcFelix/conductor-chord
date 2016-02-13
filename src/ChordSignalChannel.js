@@ -345,7 +345,7 @@ class ChordSignalChannel{
 		let msg = this.chord.newMessage(this.id, handler, data, dest);
 
 		if(this.handshakes[dest] && this.handshakes[dest].lastMessage)
-			lastMessage.reply(msg);
+			this.handshakes[dest].lastMessage.reply(msg);
 		else
 			this.chord.message(msg);
 	}
