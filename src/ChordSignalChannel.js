@@ -351,7 +351,7 @@ class ChordSignalChannel{
 	}
 
 	updateLastMessage(message){
-		if(message.src && this.handshakes[id])
+		if(message.src && this.handshakes[message.src])
 			this.handshakes[message.src].lastMessage = message;
 	}
 
