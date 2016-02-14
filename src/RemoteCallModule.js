@@ -10,11 +10,11 @@ class RemoteCallModule extends RemoteCallable {
 		chord.registerModule(this);
 	}
 
-	delegate (handler, message) {
-		if(super.delegate(handler, message))
+	delegate (message) {
+		if(super.delegate(message))
 			return;
 
-		switch(handler){
+		switch(message.handler){
 			case "getSuccessor":
 				this.chord.node.getSuccessor()
 					.then(
@@ -25,7 +25,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "setSuccessor":
-				this.chord.node.setSuccessor(this.chord.obtainRemoteNode(message.params[0]))
+				this.chord.node.setSuccessor(this.chord.obtainRemoteNode(message.data.params[0]))
 					.then(
 						result => this.answer(message, null)
 					);
@@ -40,7 +40,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "setPredecessor":
-				this.chord.node.setPredecessor(this.chord.obtainRemoteNode(message.params[0]))
+				this.chord.node.setPredecessor(this.chord.obtainRemoteNode(message.data.params[0]))
 					.then(
 						result => this.answer(message, null)
 					)
@@ -49,7 +49,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "updateFingerTable":
-				this.chord.node.updateFingerTable(this.chord.obtainRemoteNode(message.params[0]), message.params[1])
+				this.chord.node.updateFingerTable(this.chord.obtainRemoteNode(message.data.params[0]), message.data.params[1])
 					.then(
 						result => this.answer(message, null)
 					)
@@ -58,7 +58,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "findSuccessor":
-				this.chord.node.findSuccessor(new ID(message.params[0]))
+				this.chord.node.findSuccessor(new ID(message.data.params[0]))
 					.then(
 						result => this.answer(message, result.id.idString)
 					)
@@ -67,7 +67,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "findPredecessor":
-				this.chord.node.findPredecessor(new ID(message.params[0]))
+				this.chord.node.findPredecessor(new ID(message.data.params[0]))
 					.then(
 						result => this.answer(message, result.id.idString)
 					)
@@ -76,7 +76,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "closestPrecedingFinger":
-				this.chord.node.closestPrecedingFinger(new ID(message.params[0]))
+				this.chord.node.closestPrecedingFinger(new ID(message.data.params[0]))
 					.then(
 						result => this.answer(message, result.id.idString)
 					)
@@ -85,7 +85,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "notify":
-				this.chord.node.notify(this.chord.obtainRemoteNode(message.params[0]))
+				this.chord.node.notify(this.chord.obtainRemoteNode(message.data.params[0]))
 					.then(
 						result => this.answer(message, null)
 					)
@@ -94,7 +94,7 @@ class RemoteCallModule extends RemoteCallable {
 					);
 				break;
 			case "unlinkClient":
-				this.answer(message, this.chord.node.unlinkClient(message.params[0]));
+				this.answer(message, this.chord.node.unlinkClient(message.data.params[0]));
 				break;
 			default:
 				//ILLEGAL CALL

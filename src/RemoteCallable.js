@@ -24,10 +24,9 @@ class RemoteCallable {
 			msg = {
 				params,
 				reqID,
-				returnID: this.chord.id.idString,
 				_remoteNo: 1
 			},
-			msgText = ModuleRegistry.wrap(this.id, method, msg);
+			msgText = ModuleRegistry.wrap(msg);
 
 		return new Promise((resolve, reject) => {
 			let myReqObj = {
@@ -44,13 +43,14 @@ class RemoteCallable {
 
 			this._requestSpace[reqID] = myReqObj;
 
-			this.chord.message(destID, msgText);
+			this.chord.sendNewMessage(this.id, method, msgText, destID);
 		});
 	}
 
-	delegate (handler, message) {
+	delegate (message) {
 		let handled = true;
-		switch (handler) {
+
+		switch (message.handler) {
 			case "answer":
 				this._rcvAnswer(message);
 				break;
@@ -61,12 +61,12 @@ class RemoteCallable {
 				//or is a remote call.
 				//existence (or non-existence) of _remote
 				//will tell us which (answered) calls to check for.
-				if(message._remote
-					&& message.returnID in this._answerCache
-					&& message.reqID in this._answerCache[message.returnID]) {
+				if(message.data._remote
+					&& message.src in this._answerCache
+					&& message.data.reqID in this._answerCache[message.src]) {
 
 					//We know the answer to this lucky soul's request!
-					this.answer(message.returnID, message.reqID, this._answerCache[message.returnID][message.reqID]);
+					this.answer(message, this._answerCache[message.src][message.data.reqID]);
 
 				} else {
 					//Not ours, pass it by.
@@ -78,14 +78,14 @@ class RemoteCallable {
 	}
 
 	_rcvAnswer (message) {
-		let myReqStore = this._requestSpace[message.reqID];
+		let myReqStore = this._requestSpace[message.data.reqID];
 
-		if(myReqStore && message.returnID && message.returnID === this.chord.id.idString){
+		if(myReqStore && message.dest && message.dest === this.chord.id.idString){
 			//CLEAR THE TIMEOUT ASAP.
 			clearTimeout(myReqStore.timeout);
 
-			this._requestSpace[message.reqID].resolve(message.result);
-			delete this._requestSpace[message.reqID];
+			this._requestSpace[message.data.reqID].resolve(message.data.result);
+			delete this._requestSpace[message.data.reqID];
 		} else {
 			this.bypassAnswer(message);
 		}
@@ -94,17 +94,17 @@ class RemoteCallable {
 	_rcvError (message) {
 		//If retries on the call is zero, then reject.
 		//Else? Retry, decrement the counter if error matches the packet we sent.
-		let myReqStore = this._requestSpace[message.reqID];
+		let myReqStore = this._requestSpace[message.data.reqID];
 
 		//Make sure we're responding to a genuine request here folks.
-		if(myReqStore && message.returnID && message.returnID === this.chord.id.idString){
+		if(myReqStore && message.dest && message.dest === this.chord.id.idString){
 			
 			if(myReqStore.triesLeft === 0){
 				//No tries left, be doen with this!
-				myReqStore.reject(message.reason);
-				delete this._requestSpace[message.reqID];
+				myReqStore.reject(message.data.reason);
+				delete this._requestSpace[message.data.reqID];
 
-			} else if (message._remoteNo > this._rcRetries - myReqStore.triesLeft) {
+			} else if (message.data._remoteNo > this._rcRetries - myReqStore.triesLeft) {
 				//Packet is not an earlier error.
 				//I.e. its _remoteNo > maxRetries - remRetries
 				clearTimeout(myReqStore.timeout);
@@ -115,7 +115,7 @@ class RemoteCallable {
 				myReqStore.timeout = this.setupTimeoutForRequest(myReqStore, this._rcTimeout);
 
 				//Try, try again.
-				this.chord.message(myReqStore.destID, ModuleRegistry.wrap(this.id, myReqStore.method, myReqStore.msg));
+				this.chord.sendNewMessage(this.id, myReqStore.method, ModuleRegistry.wrap(myReqStore.msg), myReqStore.destID);
 			}
 
 		} else {
@@ -126,12 +126,15 @@ class RemoteCallable {
 
 	setupTimeoutForRequest (requestSpaceEntry, duration) {
 		return setTimeout(()=> {
-			if(requestSpaceEntry) this._rcvError({
-				reason: "Timed out.",
-				reqID: requestSpaceEntry.reqID,
-				returnID: requestSpaceEntry.msg.returnID,
-				_remoteNo: requestSpaceEntry.msg._remoteNo
-			})
+			if(requestSpaceEntry) this._rcvError(
+				{
+					data:{
+						reason: "Timed out.",
+						reqID: requestSpaceEntry.reqID,
+						_remoteNo: requestSpaceEntry.msg._remoteNo
+					},
+					dest: this.chord.id.idString
+				} )
 		}, duration);
 	}
 
@@ -153,32 +156,38 @@ class RemoteCallable {
 
 	answer (message, result) {
 		//Place into answer cache.
-		let returnID = message.returnID,
-			reqID = message.reqID,
-			_remoteNo = message._remoteNo;
+		let returnID = message.src,
+			reqID = message.data.reqID,
+			_remoteNo = message.data._remoteNo;
 
 		this._cacheAnswer(returnID, reqID, result);
-		this.chord.message(returnID, ModuleRegistry.wrap(this.id, "answer", {reqID, result, returnID, _remoteNo, hops: 5}));
+		message.reply(this.chord.newMessage(this.id, "answer", ModuleRegistry.wrap({reqID, result, _remoteNo, hops: 5}), returnID));
 	}
 
 	error (message, reason) {
-		this.chord.message(message.returnID, ModuleRegistry.wrap(this.id, "error", {
-			reqID: message.reqID, reason, returnID: message.returnID, _remoteNo: message._remoteNo, hops: 10
-		}));
+		let returnID = message.src,
+			reqID = message.data.reqID,
+			_remoteNo = message.data._remoteNo;
+
+		message.reply(this.chord.newMessage(this.id, "error", ModuleRegistry.wrap({reqID, reason, _remoteNo, hops: 10}), returnID));
 	}
 
-	bypassAnswer (answerObj) {
-		answerObj.hops--;
-		if(answerObj.hops)
-			this.chord.message(answerObj.returnID, ModuleRegistry.wrap(this.id, "answer", answerObj), true);
-		else
-			this.error(answerObj, `Answer was lost - failed to route.`);
+	bypassAnswer (message) {
+		message.data.hops--;
+		if(message.data.hops > 0){
+			message.data = ModuleRegistry.wrap(message.data);
+			message.pass();
+		} else {
+			this.error(message, `Answer was lost - failed to route.`);
+		}
 	}
 
-	bypassError (errorObj) {
-		errorObj.hops--;
-		if(errorObj.hops)
-			this.chord.message(errorObj.returnID, ModuleRegistry.wrap(this.id, "error", errorObj), true);
+	bypassError (message) {
+		message.data.hops--;
+		if(message.data.hops > 0){
+			message.data = ModuleRegistry.wrap(message.data);
+			message.pass();
+		}
 	}
 }
 

@@ -7,6 +7,8 @@ const u = require("./UtilFunctions.js"),
 	ModuleRegistry = require("./ModuleRegistry.js"),
 	RemoteCallModule = require("./RemoteCallModule.js"),
 	FileStore = require("./FileStore.js"),
+	MessageCore = require("./MessageCore.js"),
+	Message = require("./Message.js"),
 	Node = require("./Node.js"),
 	RemoteNode = require("./RemoteNode.js"),
 	ID = require("./ID.js"),
@@ -28,6 +30,8 @@ class ConductorChord {
 				retries: 2,
 				cacheAnswerDuration: 20000
 			},
+
+			messageMaxHops: 448,
 
 			serverConfig: {
 				port: 7171
@@ -75,6 +79,7 @@ class ConductorChord {
 		this.registry = new ModuleRegistry();
 		this.rcm = new RemoteCallModule(this);
 		this.fileStore = new FileStore(this);
+		this.messageCore = new MessageCore(this);
 
 		//Store the K,V pair <ID, pubKey> on the local view of the DHT.
 		//This will be relocated once an actual network is joined.
@@ -91,8 +96,9 @@ class ConductorChord {
 		this.conductor.onconnection = conn => {
 			conn.ondatachannel = dChan => {
 				dChan.onmessage = msg => {
-					let parsy = JSON.parse(msg.data);
-					this.message(parsy.id, parsy.data)
+					let msgObj = this.messageCore.parseMessage(msg.data);
+					if(msgObj)
+						this.message(msgObj);
 				};
 
 				let node = this.obtainRemoteNode(conn.id);
@@ -185,8 +191,9 @@ class ConductorChord {
 					node.connection = conn;
 
 					conn.on("message", msg => {
-						let parsy = JSON.parse(msg.data);
-						this.message(parsy.id, parsy.data);
+						let msgObj = this.messageCore.parseMessage(msg.data);
+						if(msgObj)
+							this.message(msgObj);
 					});
 
 					conn.ondisconnect = evt => {
@@ -402,8 +409,9 @@ class ConductorChord {
 				result =>{
 					u.log(this, result);
 					result.on("message", msg => {
-						let parsy = JSON.parse(msg.data);
-						this.message(parsy.id, parsy.data);
+						let msgObj = this.messageCore.parseMessage(msg.data);
+						if(msgObj)
+							this.message(msgObj);
 					});
 
 					let srvNode = new RemoteNode(this, new ID(result.id), result);
@@ -447,17 +455,35 @@ class ConductorChord {
 		return this.fileStore.retrieve(key);
 	}
 
-	message(id, msg, bypass){
-		console.log(`Received message at the chord for ${ID.coerceString(id)}: ${msg}`);
+	message(msg){
+		if(!(msg instanceof Message))
+			return;
 
-		if(this.directNodes[ID.coerceString(id)])
-			this.directNodes[ID.coerceString(id)].message(id, msg);
+		msg.hops--;
+		if(msg.hops<=0)
+			return null;
+
+		u.log(this, `Received message at the chord for ${msg.dest}: ${msg.data}`);
+
+		if(this.directNodes[msg.dest])
+			this.directNodes[msg.dest].message(msg);
 		else
-			this.node.message(id, msg, bypass);
+			this.node.message(msg);
 	}
 
 	registerModule(module){
 		this.registry.register(module);
+	}
+
+	newMessage (module, handler, data, dest) {
+		return new Message(this, 0, {src: this.id, dest, module, handler, data, hops: this.config.messageMaxHops});
+	}
+
+	sendNewMessage (module, handler, data, dest) {
+		let m = this.newMessage(module, handler, data, dest);
+
+		if(m)
+			this.message(m);
 	}
 }
 

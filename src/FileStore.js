@@ -12,13 +12,13 @@ class FileStore extends RemoteCallable {
 		chord.registerModule(this);
 	}
 
-	delegate (handler, message) {
-		if(super.delegate(handler, message))
+	delegate (message) {
+		if(super.delegate(message))
 			return;
 
-		switch (handler) {
+		switch (message.handler) {
 			case "store":
-				this.store(message.params[0], message.params[1])
+				this.store(message.data.params[0], message.data.params[1])
 					.then(
 						response => this.answer(message, response)
 					)
@@ -27,7 +27,7 @@ class FileStore extends RemoteCallable {
 					);
 				break;
 			case "retrieve":
-				this.retrieve(message.params[0])
+				this.retrieve(message.data.params[0])
 					.then(
 						response => this.answer(message, response)
 					)

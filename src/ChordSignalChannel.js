@@ -70,24 +70,24 @@ class ChordSignalChannel{
 
 		u.log(this.chord, `Response requested at conductor via chord:`);
 
-		switch(msg.type){
+		switch(msg.handler){
 			case "sdp-offer":
 				u.log(this.chord, `SDP offer from ${out.id}`);
 
 				out.type = msg_types.RESPONSE_SDP_OFFER;
-				out.data = msg.sdp;
+				out.data = msg.data.sdp;
 				break;
 			case "sdp-answer":
 				u.log(this.chord, `SDP answer from ${out.id}`);
 
 				out.type = msg_types.RESPONSE_SDP_ANSWER;
-				out.data = msg.sdp;
+				out.data = msg.data.sdp;
 				break;
 			case "ice":
 				u.log(this.chord, `ICE candidate from ${out.id}`);
 
 				out.type = msg_types.RESPONSE_ICE;
-				out.data = msg.ice;
+				out.data = msg.data.ice;
 				break;
 			default:
 				u.log(this.chord, `Misc message from: ${out.id}`);
@@ -96,7 +96,7 @@ class ChordSignalChannel{
 				break;
 		}
 
-		out.id = msg.id;
+		out.id = msg.src;
 
 		return out;
 	}
@@ -108,13 +108,17 @@ class ChordSignalChannel{
 	// ChordMessageHandler
 	//
 
-	delegate(handler, message){
+	delegate(message){
 		u.log(this.chord, "Received message at chord signal channel:");
-		u.log(this.chord, {handler, message});
+		u.log(this.chord, `${message}`);
 
-		message.type = handler;
+		//Band aid fix.
+		//I can either do this or force proxying over the successor.
+		//Ideally, we would just proxy when overwriting an existing successor...
+		if(message.dest !== this.chord.id.idString && message.handler !== "key-shake-init")
+			return message.pass();
 
-		switch(handler){
+		switch(message.handler){
 			case "key-shake-init":
 				this.recvHandshakeInit(message);
 				break;
@@ -122,16 +126,11 @@ class ChordSignalChannel{
 				this.recvHandshakeReply(message);
 				break;
 			case "sdp-offer":
-				this.recvSDPOffer(message);
-				break;
 			case "sdp-answer":
-				this.recvSDPAnswer(message);
+				this.recvSDP(message);
 				break;
 			case "ice":
 				this.recvICE(message);
-				break;
-			case "proxy":
-				this.handleProxyReq(message);
 				break;
 		}
 	}
@@ -215,38 +214,35 @@ class ChordSignalChannel{
 
 		entry.status = HSHAKE_SENT;
 
-		// this.message(id, "key-shake-init", {id: ID.coerceString(this.chord.id), destID:id, pub: this.chord.pubKeyPem});
-		this.proxy(id, "key-shake-init", {id: ID.coerceString(this.chord.id), destID:id, pub: this.chord.pubKeyPem});
+		this.message("key-shake-init", ModuleRegistry.wrap({pub: this.chord.pubKeyPem}), id);
 	}
 
 	recvHandshakeInit(message){
-		//Message has: id, destID, pub.
-		u.log(this.chord, `Received handshake from: ${message.id}`);
+		//Message has: pub.
+		u.log(this.chord, `Received handshake from: ${message.src}`);
 
-		let entry = this.finishEntry(message.id, message.pub);
-		this.updateProxy(message.id, message.proxy);
+		let entry = this.finishEntry(message.src, message.data.pub);
+		this.updateLastMessage(message);
 
-		// this.message(message.id, "key-shake-reply", {id: ID.coerceString(this.chord.id), origID: message.destID, pub: this.chord.pubKeyPem})
-		this.proxy(message.id, "key-shake-reply", {
-			id: ID.coerceString(this.chord.id),
-			origID: message.destID,
+		this.message("key-shake-reply", ModuleRegistry.wrap({
+			origId: message.dest,
 			pub: this.chord.pubKeyPem,
 			encKey: entry.pubKey.encrypt(entry.aesKey, "RSA-OAEP")
-		});
+		}), message.src);
 	}
 
 	recvHandshakeReply(message){
-		//Message has: id, origID, pub, encKey.
-		u.log(this.chord, `Received handshake reply from ${message.origID}: true ID ${message.id}.`);
+		//Message has: origId, pub, encKey.
+		u.log(this.chord, `Received handshake reply from ${message.data.origId}: true ID ${message.src}.`);
 
-		let entry = this.finishEntry(message.id,
-			message.pub,
-			message.origID,
-			this.chord.key.privateKey.decrypt(message.encKey, "RSA-OAEP")
+		let entry = this.finishEntry(message.data.origId,
+			message.data.pub,
+			message.src,
+			this.chord.key.privateKey.decrypt(message.data.encKey, "RSA-OAEP")
 		);
 
 		try {
-			this.chord.conductor.renameConnection(message.origID, message.id);
+			this.chord.conductor.renameConnection(message.data.origId, message.src);
 		} finally {
 			this.clearActionQueue(entry);
 		}
@@ -271,12 +267,11 @@ class ChordSignalChannel{
 		cipherObj.update(forgeUtil.createBuffer(JSON.stringify(msg)));
 		cipherObj.finish();
 
-		this.proxy(id, "sdp-"+type, {
-			id: ID.coerceString(this.chord.id),
+		this.message("sdp-"+type, {
 			sdpEnc: cipherObj.output.data,
 			tag: cipherObj.mode.tag.data,
 			iv: iv
-		});
+		}, id);
 	}
 
 	sendICE(id, msg){
@@ -294,82 +289,57 @@ class ChordSignalChannel{
 		cipherObj.update(forgeUtil.createBuffer(JSON.stringify(msg)));
 		cipherObj.finish();
 
-		this.proxy(id, "ice", {
-			id: ID.coerceString(this.chord.id),
+		this.message("ice", {
 			iceEnc: cipherObj.output.data,
 			tag: cipherObj.mode.tag.data,
 			iv: iv
-		});
+		}, id);
 	}
 
-	recvSDPOffer(message){
-		//Message has: id, sdpEnc, tag, iv
+	recvSDP(message){
+		//Message has: sdpEnc, tag, iv
 
-		this.updateProxy(message.id, message.proxy);
+		this.updateLastMessage(message);
 
-		let entry = this.fetchOrCreateNodeEntry(message.id),
-			iv = message.iv,
+		let entry = this.fetchOrCreateNodeEntry(message.src),
+			iv = message.data.iv,
 			decipher = cipher.createDecipher('AES-GCM', entry.aesKey);
 
 		decipher.start({
 			iv,
 			additionalData: 'binary-encoded string',
 			tagLength: 128,
-			tag: message.tag
+			tag: message.data.tag
 		});
 
-		decipher.update(forgeUtil.createBuffer(message.sdpEnc));
+		decipher.update(forgeUtil.createBuffer(message.data.sdpEnc));
 		let success = decipher.finish();
 
-		message.sdp = (success) ? JSON.parse(decipher.output.data) : "";
-
-		this.chord.conductor.response(message, this);
-	}
-
-	recvSDPAnswer(message){
-		//Message has: id, sdpEnc, tag, iv
-
-		this.updateProxy(message.id, message.proxy);
-
-		let entry = this.fetchOrCreateNodeEntry(message.id),
-			iv = message.iv,
-			decipher = cipher.createDecipher('AES-GCM', entry.aesKey);
-
-		decipher.start({
-			iv,
-			additionalData: 'binary-encoded string',
-			tagLength: 128,
-			tag: message.tag
-		});
-
-		decipher.update(forgeUtil.createBuffer(message.sdpEnc));
-		let success = decipher.finish();
-
-		message.sdp = (success) ? JSON.parse(decipher.output.data) : "";
+		message.data.sdp = (success) ? JSON.parse(decipher.output.data) : "";
 
 		this.chord.conductor.response(message, this);
 	}
 
 	recvICE(message) {
-		//Message has: id, iceEnc, tag, iv
+		//Message has: iceEnc, tag, iv
 
-		this.updateProxy(message.id, message.proxy);
+		this.updateLastMessage(message);
 
-		let entry = this.fetchOrCreateNodeEntry(message.id),
-			iv = message.iv,
+		let entry = this.fetchOrCreateNodeEntry(message.src),
+			iv = message.data.iv,
 			decipher = cipher.createDecipher('AES-GCM', entry.aesKey);
 
 		decipher.start({
 			iv,
 			additionalData: 'binary-encoded string',
 			tagLength: 128,
-			tag: message.tag
+			tag: message.data.tag
 		});
 
-		decipher.update(forgeUtil.createBuffer(message.iceEnc));
+		decipher.update(forgeUtil.createBuffer(message.data.iceEnc));
 		let success = decipher.finish();
 
-		message.ice = (success) ? JSON.parse(decipher.output.data) : "";
+		message.data.ice = (success) ? JSON.parse(decipher.output.data) : "";
 
 		this.chord.conductor.response(message, this);
 	}
@@ -377,81 +347,21 @@ class ChordSignalChannel{
 	//
 	// Helpers
 	//
-	message(id, handler, msg) {
-		this.chord.message(id, ModuleRegistry.wrap(this.id, handler, msg));
-	}
+	message(handler, data, dest) {
+		let msg = this.chord.newMessage(this.id, handler, data, dest);
 
-	handleProxyReq(msg) {
-		msg.data.o.proxy = ID.coerceString(this.chord.id);
-
-		this.chord.message(msg.dest, JSON.stringify(msg.data));
-	}
-
-	proxy(id, handler, msg){
-		let successor = this.chord.node.finger[0].node,
-			predecessor = this.chord.node.predecessor;
-
-		if( successor
-			&& (typeof successor == "RemoteNode")
-			&& successor.isConnected()
-			&& predecessor
-			&& (typeof predecessor == "RemoteNode")
-			&& predecessor.isConnected() )
-			this.proxyByRing(id, handler, msg);
+		if(this.handshakes[dest] && this.handshakes[dest].lastMessage)
+			this.handshakes[dest].lastMessage.reply(msg);
 		else
-			this.proxyByDirect(id, handler, msg);
+			this.chord.message(msg);
 	}
 
-	updateProxy(id, proxyId){
-		if(proxyId && this.handshakes[id])
-			this.handshakes[id].proxy = proxyId;
+	updateLastMessage(message){
+		if(message.src && this.handshakes[message.src])
+			this.handshakes[message.src].lastMessage = message;
 	}
 
-	proxyByRing(id, handler, msg){
-		//needs to lookup the proxy last used for the dest...
-		let record = this.handshakes[id];
 
-		if(!record || !record.proxy)
-			this.chord.message(id, handler, msg)
-		else {
-			this.chord.message(ID.coerceString(record.proxy), ModuleRegistry.wrap(this.id, "proxy", {
-				data: {m: this.id, h: handler, o: msg},
-				dest: ID.coerceString(id),
-				src: ID.coerceString(this.chord.id)
-			}))
-		}
-	}
-
-	proxyByDirect(id, handler, msg) {
-		//Select either our successor, the server or a working directNode.
-		let successor = this.chord.node.finger[0].node,
-			server = this.chord.server.node,
-			directNodeNames = Object.getOwnPropertyNames(this.chord.directNodes),
-			chosen;
-
-		if(this.chord.state === "partial" || this.chord.state.substring(0,4) === "full") {
-			chosen = successor;
-		} else if (server && server.isConnected()) {
-			chosen = server;
-		} else if (directNodeNames.length !== 0) {
-			for (var i = directNodeNames.length - 1; i >= 0; i--) {
-				chosen = this.chord.directNodes[directNodeNames[i]];
-
-				if (chosen.isConnected())
-					break;
-				if (i==0)
-					chosen = null;
-			};
-		} else {
-			//Whelp kid you're all out of options.
-		}
-
-		chosen.message(ID.coerceString(chosen.id), ModuleRegistry.wrap(this.id, "proxy", {
-			data: {m: this.id, h: handler, o: msg},
-			dest: ID.coerceString(id),
-			src: ID.coerceString(this.chord.id)
-		}))
-	}
 }
 
 module.exports = ChordSignalChannel;

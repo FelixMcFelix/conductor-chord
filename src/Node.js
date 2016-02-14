@@ -389,18 +389,13 @@ class Node{
 
 	//Custom
 	
-	message(id, msg, bypass){
-		//TODO
-
-		// debugger;
-
-		u.log(this.chord, `Received message at the local node for ${id}: ${msg}
+	message(msg){
+		u.log(this.chord, `Received message at the local node for ${msg.dest}: ${msg.data}
 			I am ${this.id.idString}`);
 
 		u.log(this.chord, `!!! STATE: ${this.chord.state} !!!`)
 
-		if(this.chord.state === "external" && ID.compare(id, this.id)!== 0) {
-			//TODO: Proxy
+		if(this.chord.state === "external" && ID.compare(msg.dest, this.id)!== 0) {
 			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes),
 				chosen;
 
@@ -415,30 +410,29 @@ class Node{
 			}
 
 			if(chosen) {
-				chosen.message(id, msg);
+				chosen.message(this.chord.messageCore.makeProxyMessage(msg, chosen.id))
 			}
 
-		} else if (this.chord.state === "partial" && ID.compare(id, this.id)!== 0 ) {
-			//TODO: Proxy
+		} else if (this.chord.state === "partial" && ID.compare(msg.dest, this.id)!== 0 ) {
 			this.getSuccessor()
 				.then(
-					successor => successor.message(id, msg)
+					successor => successor.message(this.chord.messageCore.makeProxyMessage(msg, successor.id))
 				)
-		} else if (!bypass && (ID.compare(this.id, id)===0 || ID.inLeftOpenBound(id, this.predecessor.id, this.id))){
+		} else if (!msg.bypass && (ID.compare(this.id, msg.dest)===0 || ID.inLeftOpenBound(msg.dest, this.predecessor.id, this.id))){
 			//Pass to appropriate handler - this is our message.
-			this.chord.registry.parse(msg);
+			this.chord.messageCore.handleMessage(msg);
 		} else {
 			//Pass along the chain to a responsible node.
-			this.closestPrecedingFinger(id)
+			this.closestPrecedingFinger(msg.dest)
 			.then(
 				dest => {
 					if(dest===this){
 						//Successor is likely inaccurate - the earlier checks determined that
 						//the message was NOT for us.
 						//Send to successor, it may know better.
-						this.finger[0].node.message(id, msg);
+						this.finger[0].node.message(msg);
 					} else {
-						dest.message(id, msg);
+						dest.message(msg);
 					}
 				}
 			)
