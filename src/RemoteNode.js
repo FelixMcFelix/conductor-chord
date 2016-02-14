@@ -23,16 +23,6 @@ class RemoteNode {
 		});
 	}
 
-	setSuccessor(s){
-		//Send them an ID, return the remotenode supplied.
-		return new Promise((resolve, reject) => {
-			this.chord.rcm.call(this.id, "setSuccessor", [ID.coerceString(s.id)])
-				.then(result => resolve(s),
-					reason => reject(reason)
-				);
-		});
-	}
-
 	getPredecessor(){
 		//Return an ID, then create a remotenode from that.
 		return new Promise((resolve, reject) => {
@@ -41,20 +31,6 @@ class RemoteNode {
 					reason => reject(reason)
 				);
 		});
-	}
-
-	setPredecessor(p){
-		//Send them an ID, return the remotenode supplied.
-		return new Promise((resolve, reject) => {
-			this.chord.rcm.call(this.id, "setPredecessor", [ID.coerceString(p.id)])
-				.then(result => resolve(p),
-					reason => reject(reason)
-				);
-		});
-	}
-
-	updateFingerTable(foreignNode, index){
-		return this.chord.rcm.call(this.id, "updateFingerTable", [ID.coerceString(foreignNode.id), index]);
 	}
 
 	findSuccessor(id){

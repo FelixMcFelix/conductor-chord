@@ -6,7 +6,6 @@ const u = require("./UtilFunctions.js"),
 
 class Node{
 	constructor(chord){
-		//TODO
 		this.id = chord.id;
 		this.chord = chord;
 		this.finger = [];
@@ -16,10 +15,6 @@ class Node{
 		for(var i=0; i<chord.config.idWidth; i++)
 			this.finger[i] = new Finger(this, i);
 	}
-
-	//NOTE:
-	//These show the algorithms, but they do not account for RPC, promises, callbacks etc...
-	//Redo these as time goes on.
 
 	setFinger(index, node){
 		//Set the node, and then check further indices to see if this node is a better fit.
@@ -69,14 +64,12 @@ class Node{
 		};
 	}
 
-	//Promise updated
 	getSuccessor(){
 		return new Promise((resolve, reject) => {
 			resolve(this.finger[0].node)
 		}); 
 	}
 
-	//Promise updated
 	setSuccessor(val){
 		return new Promise((resolve, reject) => {
 			let end = () => {
@@ -93,20 +86,16 @@ class Node{
 						() => end()
 					)
 			}
-
-			//this.finger[0].node = val;
 			
 		});
 	}
 
-	//Promise updated
 	getPredecessor(){
 		return new Promise((resolve, reject) => {
 			resolve(this.predecessor)
 		}); 
 	}
 
-	//Promise updated
 	setPredecessor(val){
 		return new Promise((resolve, reject) => {
 			this.predecessor = val;
@@ -118,112 +107,7 @@ class Node{
 			resolve(val);
 		});
 	}
-
-	//Promise updated
-	initOn(knownNode){
-		this.chord.server.connect = true;
-		if(knownNode){
-			return this.initialiseFingerTable(knownNode)
-				.then( () => {
-					return this.updateOthers();
-				} )
-				.then( () => {
-					if(!this.chord.server.node || !this.chord.server.node.isConnected())
-						this.chord.server.connect = false;
-				} );
-			//move keys from successor to self as well.
-		} else {
-			for(var i=0; i<this.chord.config.idwidth; i++)
-				this.finger[i].node = this;
-			this.predecessor = this;
-			if(!this.chord.server.node || !this.chord.server.node.isConnected())
-				this.chord.server.connect = false;
-			return Promise.resolve();
-		}
-
-	}
-
-	//Promise updated
-	initialiseFingerTable(knownNode){
-		return knownNode.findSuccessor(this.finger[0].start)
-			.then(
-				succ => {return this.setSuccessor(succ);}
-			)
-			.then(
-				succ => {return succ.getPredecessor();}
-			)
-			.then(
-				pred => {return this.setPredecessor(pred);}
-			)
-			.then(
-				() => {
-					let proms = [];
-
-					for(var i=0; i<this.finger.length-1; i++) {
-						let p = (proms.length===0) ? Promise.resolve() : proms[proms.length-1],
-							f = ((i)=>{
-								return () => {
-									if(ID.inRightOpenBound(this.finger[i+1].start, this.id, this.finger[i].node.id)){
-										//this.finger[i+1].node = this.finger[i].node;
-										this.setFinger(i+1, this.finger[i].node)
-									} else {
-										console.log(`Using new unknown node.`)
-										proms.push(
-											knownNode.findSuccessor(this.finger[i+1].start)
-												.then(
-													succ => {
-														//this.finger[i+1].node = succ;
-														this.setFinger(i+1, succ);
-													}
-												)
-										)
-									}
-								};
-							})(i);
-						p.then(f);
-					}
-
-					return Promise.all(proms);
-				}
-			);
-	}
-
-	//Promise updated
-	updateOthers(){
-		//Inform other nodes about our existence.
-		let proms = [];
-
-		for (var i = 0; i < this.finger.length; i++) {
-			//find last node p whose ith finger might be n
-			(i=>{proms.push(
-				this.findPredecessor(this.id.subtract(ID.powerOfTwoBuffer(i)))
-					.then(
-						p => {return p.updateFingerTable(this, i)}
-					)
-				)
-			})(i);
-		}
-
-		return Promise.all(proms);
-	}
-
-	//Promise updated
-	updateFingerTable(foreignNode, index){
-		//Update the finger of some remote node
-		if(ID.inRightOpenBound(foreignNode.id, this.id, this.finger[index].node.id)){
-			//this.finger[index].node = foreignNode;
-			this.setFinger(index, foreignNode);
-			return this.getPredecessor()
-				.then(
-					res => {return res.updateFingerTable(foreignNode, index)}
-				)
-		} else {
-			return Promise.resolve();
-		}
-
-	}
 	
-	//Promise updated
 	closestPrecedingFinger(id){
 		return new Promise( resolve => {
 			for (var i = this.finger.length - 1; i >= 0; i--) {
@@ -235,30 +119,12 @@ class Node{
 			resolve(this);
 		} );
 	}
-
-	firstSucceedingFinger(id) {
-		//New selector for fingers and self.
-		//cPF is maybe not appropriate for message routing.
-		//No promise support as can only be called locally, and only depends on local state.
-
-		//For each finger, check if the ID given is in the range (this, finger[i]]
-		//If so, return that node.
-		//If none found, return furthest finger.
-
-		for (var i = 0; i < this.finger.length-1; i++)
-			if(ID.inLeftOpenBound(id, this.id, this.finger[i].node.id))
-				return this.finger[i].node;
-
-		return this.finger[this.finger.length-1].node;
-	}
 	
-	//Promise updated
 	findSuccessor(id){
 		return this.findPredecessor(id)
 			.then( nPrime => { return nPrime.getSuccessor() } )
 	}
 	
-	//Promise updated
 	findPredecessor(id){
 		return new Promise( (resolve, reject) => {
 			let nPrime = this;
@@ -289,7 +155,6 @@ class Node{
 	}
 
 	//Stabilization methods
-	//Promise updated
 	stableJoin(knownNode){
 		let succ;
 
@@ -315,7 +180,6 @@ class Node{
 
 	//periodically verify n's immediate successor
 	//and tell the successor about n.
-	//Promise updated
 	stabilize(){
 		let oSucc;
 
@@ -362,7 +226,6 @@ class Node{
 
 	}
 
-	//Promise updated
 	notify(nPrime){
 		u.log(this.chord, `NOTIFIED BY:`);
 		u.log(this.chord, ID.coerceString(nPrime.id));
@@ -373,7 +236,6 @@ class Node{
 		return Promise.resolve();
 	}
 
-	//Promise updated
 	fixFingers(){
 		let i = Math.floor(Math.random() * (this.finger.length-1) + 1);
 		//this.finger[i].node = this.findSuccessor(this.finger[i].start);
