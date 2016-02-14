@@ -16,6 +16,14 @@ class Node{
 			this.finger[i] = new Finger(this, i);
 	}
 
+	clean () {
+		this.predecessor = this;
+
+		//Wipe the finger table
+		for(var i=0; i<this.finger.length; i++)
+			this.finger[i].node = this;
+	}
+
 	setFinger(index, node){
 		//Set the node, and then check further indices to see if this node is a better fit.
 		//Improvement over std chord.

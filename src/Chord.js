@@ -237,7 +237,7 @@ class ConductorChord {
 				disconnected: { 
 					_onEnter() {
 						//force predecessor and all fingers to be self...
-						t.node.initOn();
+						t.node.clean();
 
 						if(t.config.isServer)
 							this.transition("full_server");
