@@ -112,6 +112,12 @@ class ChordSignalChannel{
 		u.log(this.chord, "Received message at chord signal channel:");
 		u.log(this.chord, `${message}`);
 
+		//Band aid fix.
+		//I can either do this or force proxying over the successor.
+		//Ideally, we would just proxy when overwriting an existing successor...
+		if(message.dest !== this.chord.id.idString && message.handler !== "key-shake-init")
+			return message.pass();
+
 		switch(message.handler){
 			case "key-shake-init":
 				this.recvHandshakeInit(message);
