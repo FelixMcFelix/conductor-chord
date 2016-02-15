@@ -31,6 +31,11 @@ class ConductorChord {
 				cacheAnswerDuration: 20000
 			},
 
+			fileStore: {
+				itemDuration: 30000,
+				itemRefreshPeriod: 5000
+			},
+
 			messageMaxHops: 448,
 
 			serverConfig: {
@@ -453,6 +458,10 @@ class ConductorChord {
 
 	lookupItem(key){
 		return this.fileStore.retrieve(key);
+	}
+
+	updateItem (key, value) {
+		return this.fileStore.update(key, value);
 	}
 
 	message(msg){
