@@ -34,7 +34,7 @@ describe("Chord", () => {
 			return expect(
 				new Promise((resolve, reject) => {
 					setTimeout(()=> {
-						c.fileStore.update(c.id.idString, "Hi there!")
+						c.updateItem(c.id.idString, "Hi there!")
 						.then(
 							result => {return c.lookupItem(c.id.idString)}
 						)
@@ -45,6 +45,28 @@ describe("Chord", () => {
 					}, 500)
 				})
 			).to.eventually.equal("Hi there!");
+		});
+
+		it("should be able to update an owned key more than once", () => {
+			var c = new Chord();
+
+			return expect(
+				new Promise((resolve, reject) => {
+					setTimeout(()=> {
+						c.updateItem(c.id.idString, "Hi there!")
+						.then(
+							result => {return c.updateItem(c.id.idString, "Hi again!")}
+						)
+						.then(
+							result => {return c.lookupItem(c.id.idString)}
+						)
+						.then(
+							result => resolve(result),
+							reason => reject(reason)
+						)
+					}, 500)
+				})
+			).to.eventually.equal("Hi again!");
 		});
 	});	
 });

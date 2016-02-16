@@ -92,6 +92,8 @@ class FileStore extends RemoteCallable {
 						case FILE_EXISTS:
 							break;
 					}
+
+					return Promise.resolve(result);
 				}
 			);
 	}
@@ -138,7 +140,7 @@ class FileStore extends RemoteCallable {
 		}	
 	}
 
-	update (key, value) {
+	update (key, value, stopHere) {
 		let hash = sha3["sha3_"+this.chord.config.idWidth].buffer(key),
 			hashStr = ID.coerceString(new ID(hash)),
 			currentObj = this.ownedObjects[hashStr];
@@ -151,8 +153,12 @@ class FileStore extends RemoteCallable {
 		return this.call(hashStr, "update", [key, value, encData.data, encData.iv, encData.tag])
 			.then(
 				result => {
-					//TODO
 					//update seq, lHash...
+					if (result.code !== NO_FILE) {
+						currentObj.seq = result.seq;
+						currentObj.lHash = result.lHash;
+					}
+
 					switch (result.code) {
 						case UPDATE_OKAY:
 							break;
@@ -160,10 +166,14 @@ class FileStore extends RemoteCallable {
 							//Not a whole lot we can do here?
 							break;
 						case BAD_UPDATE:
-							//TODO: run another, identical call now that we have updated seq and
+							//run another, identical call now that we have updated seq and
 							//lHash. If this fails, then I guess you never had rights?
+							if(stopHere)
+								return this.update(key, value, true);
 							break;
 					}
+
+					return Promise.resolve(result);
 				}
 			)
 	}
@@ -277,7 +287,8 @@ class FileStore extends RemoteCallable {
 								//File was not found?
 								failureCount++;
 								if (failureCount > 6) {
-									//TODO: DELETE OWNERSHIP
+									//DELETE OWNERSHIP
+									this.dropOwnership(key);
 								}
 								break;
 						}
@@ -285,6 +296,19 @@ class FileStore extends RemoteCallable {
 				);
 			}, this.chord.config.fileStore.itemRefreshPeriod)
 		};
+	}
+
+	dropOwnership (key) {
+		let hash = sha3["sha3_"+this.chord.config.idWidth].buffer(key),
+			keyHash = ID.coerceString(new ID(hash)),
+			obj = this.ownedObjects[keyHash];
+
+		if (obj) {
+			if(obj.interval)
+				clearInterval(obj.interval);
+
+			delete this.ownedObjects[keyHash];
+		}
 	}
 
 	static encrypt (data, aesKey) {
