@@ -304,8 +304,9 @@ class FileStore extends RemoteCallable {
 			obj = this.ownedObjects[keyHash];
 
 		if (obj) {
-			if(obj.interval)
+			if(obj.interval) {
 				clearInterval(obj.interval);
+			}
 
 			delete this.ownedObjects[keyHash];
 		}

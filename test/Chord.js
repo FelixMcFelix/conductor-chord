@@ -10,20 +10,26 @@ describe("Chord", () => {
 	describe("Construction", function() {
 		this.timeout(0);
 		var tim, c1, c2, c;
+		var config = {
+			fileStore: {
+				itemDuration: 1000,
+				itemRefreshPeriod: 100
+			}
+		}
 
 		it("should construct without error, given no additional config", () => {
-			expect(()=>{var k = new Chord();}).to.not.throw(Error);
+			expect(()=>{c = new Chord(config);}).to.not.throw(Error);
 		});
 
 		it("should be that two constructed instances have differing pub/priv key pairs", () => {
-			c1 = new Chord();
-			c2 = new Chord();
+			c1 = new Chord(config);
+			c2 = new Chord(config);
 
 			expect(JSON.stringify(c1.key) !== JSON.stringify(c2.key)).to.be.true;
 		});
 
 		it("should hold the entry corresponding to its own public key", () => {
-			c = new Chord();
+			c = new Chord(config);
 
 			return expect(
 				c.lookupItem(c.id.idString)
@@ -31,11 +37,11 @@ describe("Chord", () => {
 		});
 
 		it("should be able to update any keys it has placed within the network.", () => {
-			var c = new Chord();
+			c = new Chord(config);
 
 			return expect(
 				new Promise((resolve, reject) => {
-					setTimeout(()=> {
+					tim = setTimeout(()=> {
 						c.updateItem(c.id.idString, "Hi there!")
 						.then(
 							result => {return c.lookupItem(c.id.idString)}
@@ -50,11 +56,11 @@ describe("Chord", () => {
 		});
 
 		it("should be able to update an owned key more than once", () => {
-			c = new Chord();
+			c = new Chord(config);
 
 			return expect(
 				new Promise((resolve, reject) => {
-					setTimeout(()=> {
+					tim = setTimeout(()=> {
 						c.updateItem(c.id.idString, "Hi there!")
 						.then(
 							result => {return c.updateItem(c.id.idString, "Hi again!")}
@@ -69,6 +75,22 @@ describe("Chord", () => {
 					}, 500)
 				})
 			).to.eventually.equal("Hi again!");
+		});
+
+		it("should hold onto an object for longer than its max lifetime", () => {
+			c = new Chord(config);
+
+			return expect(
+				new Promise((resolve, reject) => {
+					tim = setTimeout(()=> {
+						return c.lookupItem(c.id.idString)
+						.then(
+							result => resolve(result),
+							reason => reject(reason)
+						)
+					}, 5000)
+				})
+			).to.eventually.equal(c.pubKeyPem);
 		});
 
 		afterEach(() => {
