@@ -28,7 +28,30 @@ describe("Chord", () => {
 			expect(JSON.stringify(c1.key) !== JSON.stringify(c2.key)).to.be.true;
 		});
 
-		it("should hold the entry corresponding to its own public key", () => {
+		afterEach(() => {
+			if(tim)
+				clearTimeout(tim);
+
+			if(c)
+				c.fileStore.dropOwnership(c.id.idString);
+			if(c1)
+				c1.fileStore.dropOwnership(c1.id.idString);
+			if(c2)
+				c2.fileStore.dropOwnership(c2.id.idString);
+		});
+	});
+
+	describe("File System", function() {
+		this.timeout(0);
+		var tim, c1, c2, c;
+		var config = {
+			fileStore: {
+				itemDuration: 1000,
+				itemRefreshPeriod: 100
+			}
+		}
+
+		it("should hold the entry corresponding to its own public key on construction", () => {
 			c = new Chord(config);
 
 			return expect(
@@ -91,6 +114,26 @@ describe("Chord", () => {
 					}, 5000)
 				})
 			).to.eventually.equal(c.pubKeyPem);
+		});
+
+		it("should not hold an item a set time after it has been disowned", () => {
+			c = new Chord(config);
+
+			return expect(
+				new Promise((resolve, reject) => {
+					tim = setTimeout(()=> {
+						c.fileStore.dropOwnership(c.id.idString);
+
+						setTimeout(() => {
+							c.lookupItem(c.id.idString)
+								.then(
+									result => resolve(result),
+									reason => reject(reason)
+								)
+						}, 1500)
+					}, 500)
+				})
+			).to.eventually.equal(null);
 		});
 
 		afterEach(() => {
