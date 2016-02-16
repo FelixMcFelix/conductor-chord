@@ -24,34 +24,10 @@ class RemoteCallModule extends RemoteCallable {
 						reason => this.error(message, reason)
 					);
 				break;
-			case "setSuccessor":
-				this.chord.node.setSuccessor(this.chord.obtainRemoteNode(message.data.params[0]))
-					.then(
-						result => this.answer(message, null)
-					);
-				break;
 			case "getPredecessor":
 				this.chord.node.getPredecessor()
 					.then(
 						result => this.answer(message, (result) ? result.id.idString : result)
-					)
-					.catch(
-						reason => this.error(message, reason)
-					);
-				break;
-			case "setPredecessor":
-				this.chord.node.setPredecessor(this.chord.obtainRemoteNode(message.data.params[0]))
-					.then(
-						result => this.answer(message, null)
-					)
-					.catch(
-						reason => this.error(message, reason)
-					);
-				break;
-			case "updateFingerTable":
-				this.chord.node.updateFingerTable(this.chord.obtainRemoteNode(message.data.params[0]), message.data.params[1])
-					.then(
-						result => this.answer(message, null)
 					)
 					.catch(
 						reason => this.error(message, reason)

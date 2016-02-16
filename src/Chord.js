@@ -31,6 +31,11 @@ class ConductorChord {
 				cacheAnswerDuration: 20000
 			},
 
+			fileStore: {
+				itemDuration: 30000,
+				itemRefreshPeriod: 5000
+			},
+
 			messageMaxHops: 448,
 
 			serverConfig: {
@@ -237,7 +242,7 @@ class ConductorChord {
 				disconnected: { 
 					_onEnter() {
 						//force predecessor and all fingers to be self...
-						t.node.initOn();
+						t.node.clean();
 
 						if(t.config.isServer)
 							this.transition("full_server");
@@ -453,6 +458,10 @@ class ConductorChord {
 
 	lookupItem(key){
 		return this.fileStore.retrieve(key);
+	}
+
+	updateItem (key, value) {
+		return this.fileStore.update(key, value);
 	}
 
 	message(msg){
