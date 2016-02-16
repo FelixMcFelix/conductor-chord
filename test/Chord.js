@@ -9,19 +9,21 @@ chai.use(chaiAsPromised);
 describe("Chord", () => {
 	describe("Construction", function() {
 		this.timeout(0);
+		var tim, c1, c2, c;
+
 		it("should construct without error, given no additional config", () => {
 			expect(()=>{var k = new Chord();}).to.not.throw(Error);
 		});
 
 		it("should be that two constructed instances have differing pub/priv key pairs", () => {
-			var c1 = new Chord();
-			var c2 = new Chord();
+			c1 = new Chord();
+			c2 = new Chord();
 
 			expect(JSON.stringify(c1.key) !== JSON.stringify(c2.key)).to.be.true;
 		});
 
 		it("should hold the entry corresponding to its own public key", () => {
-			var c = new Chord();
+			c = new Chord();
 
 			return expect(
 				c.lookupItem(c.id.idString)
@@ -48,7 +50,7 @@ describe("Chord", () => {
 		});
 
 		it("should be able to update an owned key more than once", () => {
-			var c = new Chord();
+			c = new Chord();
 
 			return expect(
 				new Promise((resolve, reject) => {
@@ -67,6 +69,18 @@ describe("Chord", () => {
 					}, 500)
 				})
 			).to.eventually.equal("Hi again!");
+		});
+
+		afterEach(() => {
+			if(tim)
+				clearTimeout(tim);
+
+			if(c)
+				c.fileStore.dropOwnership(c.id.idString);
+			if(c1)
+				c1.fileStore.dropOwnership(c1.id.idString);
+			if(c2)
+				c2.fileStore.dropOwnership(c2.id.idString);
 		});
 	});	
 });
