@@ -363,7 +363,7 @@ class FileStore extends RemoteCallable {
 		let secret = this.chord.key.privateKey.decrypt(secureKey, "RSA-OAEP");
 
 		//Now take the hash of the item's key...
-		let hash = sha3["sha3_"+this.chord.config.idWidth].buffer(key),
+		let hash = sha3["sha3_"+this.chord.config.idWidth].buffer(itemKey),
 			hashStr = ID.coerceString(new ID(hash)),
 			presentObj = this.storage[hashStr];
 
