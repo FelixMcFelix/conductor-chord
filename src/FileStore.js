@@ -320,6 +320,9 @@ class FileStore extends RemoteCallable {
 	}
 
 	relocateKeys () {
+		if (this.chord.state.substr(0,5)!=="full_")
+			return;
+
 		for (var hash in this.storage) {
 			//Safety check, and do we own this item?
 			if(!this.storage.hasOwnProperty(hash)

@@ -46,6 +46,12 @@ class ConductorChord {
 				channel: null
 			},
 
+			stabilizeInterval: 1000,
+
+			fixFingersInterval: 666,
+
+			moveKeysInterval: 10000,
+
 			isServer: false,
 
 			allowUpgrade: true,
@@ -122,8 +128,9 @@ class ConductorChord {
 		if(this.config.isServer){
 			u.log(this, "Initialising server backing channel.");
 			this.conductor.register(new BootstrapChannelServer(this));
-			setInterval(this.node.stabilize.bind(this.node), 1000);
-			setInterval(this.node.fixFingers.bind(this.node), 666);
+			setInterval(this.node.stabilize.bind(this.node), this.config.stabilizeInterval);
+			setInterval(this.node.fixFingers.bind(this.node), this.config.fixFingersInterval);
+			setInterval(this.fileStore.relocateKeys.bind(this.fileStore), this.config.moveKeysInterval);
 		}
 
 		//space to store, well, external nodes - if you're a server, for instance.
@@ -315,6 +322,12 @@ class ConductorChord {
 					_onEnter() {
 						//Check for current status of successor list, if required.
 						//TODO
+
+						t.fileStore.relocateKeys();
+					},
+
+					set_predecessor (node) {
+						t.fileStore.relocateKeys();
 					},
 
 					disconnect_successor() {
@@ -335,6 +348,10 @@ class ConductorChord {
 					//Deal with it once 
 					disconnect_predecessor() {
 						this.transition("partial");
+					},
+
+					set_predecessor (node) {
+						t.fileStore.relocateKeys();
 					},
 
 					disconnect_all() {
@@ -447,8 +464,9 @@ class ConductorChord {
 						.then(
 							() => {
 								this.server.connect = false;
-								setInterval(this.node.stabilize.bind(this.node), 1000);
-								setInterval(this.node.fixFingers.bind(this.node), 666);
+								setInterval(this.node.stabilize.bind(this.node), this.config.stabilizeInterval);
+								setInterval(this.node.fixFingers.bind(this.node), this.config.fixFingersInterval);
+								setInterval(this.fileStore.relocateKeys.bind(this.fileStore), this.config.moveKeysInterval);
 							}
 						)
 				},
