@@ -65,6 +65,11 @@ class FileStore extends RemoteCallable {
 						reason => this.error(message, reason)
 					);
 				break;
+			case "pubReq":
+				this.answer(message, {i:ID.coerceString(this.chord.id), k:this.pubKeyPem});
+				break;
+			case "moveKey":
+				this.answer(message, this._moveKey(params));
 			default:
 				break;
 		}
@@ -115,6 +120,7 @@ class FileStore extends RemoteCallable {
 			return Promise.resolve({code: FILE_EXISTS, kHash: hashStr, seq: presentObj.seq, lHash: presentObj.lHash});
 
 		let internalObj = {
+			key,
 			data: (typeof value === "string") ? value : JSON.stringify(value),
 			wasStr: typeof value === "string",
 			lHash: ID.coerceString(new ID(sha3["sha3_"+this.chord.config.idWidth].buffer(value))),
@@ -205,6 +211,7 @@ class FileStore extends RemoteCallable {
 
 			//Okay, we have a match!
 			this.storage[hashStr] = {
+				key,
 				data: (typeof value === "string") ? value : JSON.stringify(value),
 				wasStr: typeof value === "string",
 				lHash: ID.coerceString(new ID(sha3["sha3_"+this.chord.config.idWidth].buffer(value))),
@@ -310,6 +317,66 @@ class FileStore extends RemoteCallable {
 
 			delete this.ownedObjects[keyHash];
 		}
+	}
+
+	relocateKeys () {
+		for (var hash in this.storage) {
+			//Safety check, and do we own this item?
+			if(!this.storage.hasOwnProperty(hash)
+				|| ID.inLeftOpenBound(hash, this.chord.node.predecessor.id, this.chord.node.id))
+				continue;
+
+			//Apparently not - let's get to work!
+			this.call(hash, "pubReq", [])
+				.then(
+					result => {
+						let retID = result.i,
+							cryptor = cryptor = pki.publicKeyFromPem(result.k),
+							internalObj = this.storage[hash],
+							securedKey;
+
+						if (internalObj) {
+							securedKey = cryptor.encrypt(internalObj.aesKey, "RSA-OAEP");
+							return this.call(retID, "moveKey", [internalObj.key, internalObj.data, internalObj.wasStr, internalObj.seq, internalObj.lHash, securedKey])
+								.then(
+									result => {if (result) delete this.storage[hash];}
+								);
+						}
+					}
+				);
+		}
+	}
+
+	_moveKey (params) {
+		let itemKey = params[0],
+			data = params[1],
+			wasStr = params[2],
+			seq = params[3],
+			lHash = params[4],
+			secureKey = params[5];
+
+		//Decrypt the secret, just for us.
+		//This ensures current owners can still update their stuff.
+		let secret = this.chord.key.privateKey.decrypt(result.encKey, "RSA-OAEP");
+
+		//Now take the hash of the item's key...
+		let hash = sha3["sha3_"+this.chord.config.idWidth].buffer(key),
+			hashStr = ID.coerceString(new ID(hash)),
+			presentObj = this.storage[hashStr];
+
+		if (presentObj)
+			return false;
+
+		this.storage[hashStr] = {
+			key: itemKey,
+			data,
+			wasStr,
+			seq,
+			lHash,
+			aesKey: secret
+		}
+
+		return true;
 	}
 
 	static encrypt (data, aesKey) {

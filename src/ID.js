@@ -218,6 +218,8 @@ class ID {
 	static coerceString(unknownIDType){
 		if (typeof unknownIDType === "string") {
 			return unknownIDType
+		} else if (unknownIDType instanceof ArrayBuffer || unknownIDType instanceof Array || ArrayBuffer.isView(unknownIDType)) {
+			return new ID(unknownIDType).idString;
 		} else {
 			return unknownIDType.idString;
 		}
