@@ -66,7 +66,7 @@ class FileStore extends RemoteCallable {
 					);
 				break;
 			case "pubReq":
-				this.answer(message, {i:ID.coerceString(this.chord.id), k:this.pubKeyPem});
+				this.answer(message, {i:ID.coerceString(this.chord.id), k:this.chord.pubKeyPem});
 				break;
 			case "moveKey":
 				this.answer(message, this._moveKey(params));
