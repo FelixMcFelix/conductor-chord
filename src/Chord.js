@@ -195,6 +195,11 @@ class ConductorChord {
 					}
 					node.connection = conn;
 
+					if (!node.isConnected()) {
+						node.connection.close();
+						reject("Connection was closed - attempt to obtain link failed.");
+					}
+
 					conn.on("message", msg => {
 						let msgObj = this.messageCore.parseMessage(msg.data);
 						if(msgObj)
@@ -215,8 +220,7 @@ class ConductorChord {
 					this.statemachine.node_connection(node);
 
 					resolve(node);
-				} )
-				.catch( reason => reject(reason) );
+				} );
 		} );
 	}
 
