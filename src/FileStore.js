@@ -360,7 +360,7 @@ class FileStore extends RemoteCallable {
 
 		//Decrypt the secret, just for us.
 		//This ensures current owners can still update their stuff.
-		let secret = this.chord.key.privateKey.decrypt(result.encKey, "RSA-OAEP");
+		let secret = this.chord.key.privateKey.decrypt(secureKey, "RSA-OAEP");
 
 		//Now take the hash of the item's key...
 		let hash = sha3["sha3_"+this.chord.config.idWidth].buffer(key),
