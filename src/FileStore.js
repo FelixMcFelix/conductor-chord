@@ -334,7 +334,7 @@ class FileStore extends RemoteCallable {
 				.then(
 					result => {
 						let retID = result.i,
-							cryptor = cryptor = pki.publicKeyFromPem(result.k),
+							cryptor = pki.publicKeyFromPem(result.k),
 							internalObj = this.storage[hash],
 							securedKey;
 
