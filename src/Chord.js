@@ -522,14 +522,20 @@ class ConductorChord {
 	}
 
 	_checkForID () {
-		if (this.chord.state.substr(0,5)!=="full_")
+		if (this.state.substr(0,5)!=="full_")
 			return;
-		
+
+		u.log(this, "[CHORD]: Checking to see if own public key is still accessible...");
+
 		this.lookupItem(this.id.idString)
 			.then(
 				result => {
-					if (result!==this.pubKeyPem)
+					if (result!==this.pubKeyPem) {
+						u.log(this, "[CHORD]: Public key could not be found - readding...");
 						this.addItem(this.id.idString, this.pubKeyPem);
+					} else {
+						u.log(this, "[CHORD]: Public key still accessible.");
+					}
 				}
 			)
 	}
