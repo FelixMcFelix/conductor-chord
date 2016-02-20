@@ -69,7 +69,7 @@ class FileStore extends RemoteCallable {
 				this.answer(message, {i:ID.coerceString(this.chord.id), k:this.chord.pubKeyPem});
 				break;
 			case "moveKey":
-				this.answer(message, this._moveKey(params));
+				this.answer(message, this._moveKey(message.data.params));
 			default:
 				break;
 		}
