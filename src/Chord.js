@@ -52,6 +52,8 @@ class ConductorChord {
 
 			moveKeysInterval: 10000,
 
+			checkPubKeyInterval: 2500,
+
 			isServer: false,
 
 			allowUpgrade: true,
@@ -131,6 +133,7 @@ class ConductorChord {
 			setInterval(this.node.stabilize.bind(this.node), this.config.stabilizeInterval);
 			setInterval(this.node.fixFingers.bind(this.node), this.config.fixFingersInterval);
 			setInterval(this.fileStore.relocateKeys.bind(this.fileStore), this.config.moveKeysInterval);
+			setInterval(this._checkForID.bind(this), this.config.checkPubKeyInterval);
 		}
 
 		//space to store, well, external nodes - if you're a server, for instance.
@@ -467,6 +470,7 @@ class ConductorChord {
 								setInterval(this.node.stabilize.bind(this.node), this.config.stabilizeInterval);
 								setInterval(this.node.fixFingers.bind(this.node), this.config.fixFingersInterval);
 								setInterval(this.fileStore.relocateKeys.bind(this.fileStore), this.config.moveKeysInterval);
+								setInterval(this._checkForID.bind(this), this.config.checkPubKeyInterval);
 							}
 						)
 				},
@@ -515,6 +519,19 @@ class ConductorChord {
 
 		if(m)
 			this.message(m);
+	}
+
+	_checkForID () {
+		if (this.chord.state.substr(0,5)!=="full_")
+			return;
+		
+		this.lookupItem(this.id.idString)
+			.then(
+				result => {
+					if (result!==this.pubKeyPem)
+						this.addItem(this.id.idString, this.pubKeyPem);
+				}
+			)
 	}
 }
 
