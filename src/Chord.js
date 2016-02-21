@@ -44,7 +44,7 @@ class ConductorChord {
 
 			conductorConfig: {
 				channel: null,
-				timeout: 5000
+				timeout: 0
 			},
 
 			stabilizeInterval: 1000,
@@ -221,7 +221,6 @@ class ConductorChord {
 						this.statemachine.disconnect(node);
 					};
 
-					this.knownNodes[conn.id] = node;
 					this.directNodes[conn.id] = node;
 
 					if(ID.compare(conn.id, node.id) !== 0){
