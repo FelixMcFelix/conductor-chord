@@ -184,6 +184,8 @@ class ConductorChord {
 			return this.node;
 		} else if (this.directNodes[saneID]) {
 			return this.directNodes[saneID];
+		} else if (this.knownNodes[saneID]) {
+			return this.knownNodes[saneID];
 		} else {
 			let node = new RemoteNode(this, new ID(saneID), null);
 			this.knownNodes[saneID] = node;
@@ -197,13 +199,11 @@ class ConductorChord {
 		return new Promise( (resolve, reject) => {
 			this.conductor.connectTo(saneId, "Conductor-Chord")
 				.then( conn => {
-					let node;
+					let node = this.obtainRemoteNode(conn.id);
 
-					if (optNode) {
-						node = optNode;
-					} else {
-						node = this.obtainRemoteNode(conn.id);
-					}
+					if (optNode)
+						optNode.connection = conn;
+		
 					node.connection = conn;
 
 					if (!node.isConnected()) {
@@ -221,6 +221,7 @@ class ConductorChord {
 						this.statemachine.disconnect(node);
 					};
 
+					this.knownNodes[conn.id] = node;
 					this.directNodes[conn.id] = node;
 
 					if(ID.compare(conn.id, node.id) !== 0){
