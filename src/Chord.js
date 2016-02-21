@@ -286,7 +286,7 @@ class ConductorChord {
 						//set predecessor and successor to null
 						this._lastPredec = t.node.predecessor;
 
-						if(this._lastPredec !== null)
+						if(this._lastPredec !== null && this._lastPredec !== t.node)
 							this.transition("external_known")
 
 						t.node.predecessor = t.node;
