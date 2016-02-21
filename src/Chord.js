@@ -291,8 +291,9 @@ class ConductorChord {
 
 						t.node.predecessor = t.node;
 						t.node.setFinger(0, t.node);
-
-						t._finalResortReconnect();
+						
+						if(this.priorState !== "disconnected" && !t.config.isServer)
+							t._finalResortReconnect();
 					},
 
 					set_successor(node) {
@@ -581,14 +582,11 @@ class ConductorChord {
 		if(nodeIdList.length < 1)
 			return;
 
-		return this.node.stableJoin(this.directNodes[nodeIdList[0]])
+		let chosen = this.directNodes[nodeIdList[0]]
+
+		return this.node.stableJoin(chosen)
 			.then(
 				() => {return this.node.stabilize();}
-			)
-			.then(
-				() => {
-					return srvNode.unlinkClient();
-				}
 			)
 	}
 }
