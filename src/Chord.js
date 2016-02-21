@@ -221,6 +221,7 @@ class ConductorChord {
 						this.statemachine.disconnect(node);
 					};
 
+					this.knownNodes[conn.id] = node;
 					this.directNodes[conn.id] = node;
 
 					if(ID.compare(conn.id, node.id) !== 0){
@@ -283,8 +284,41 @@ class ConductorChord {
 				external: {
 					_onEnter() {
 						//set predecessor and successor to null
+						this._lastPredec = t.node.predecessor;
+
+						if(this._lastPredec !== null)
+							this.transition("external_known")
+
 						t.node.predecessor = t.node;
 						t.node.setFinger(0, t.node);
+
+						t._finalResortReconnect();
+					},
+
+					set_successor(node) {
+						this.transition("partial");
+					},
+
+					// set_predecessor(node) {
+					// 	if(t.node.finger[0].node )
+					// }
+
+					disconnect_all() {
+						this.transition("disconnected");
+					}
+				},
+
+				external_known: {
+					_onEnter() {
+						//we're still known about - wait some time before trying to fully reconnect.
+						t.node.predecessor = t.node;
+						t.node.setFinger(0, t.node);
+
+						this._fullReconnTime = setTimeout(()=>t._finalResortReconnect(), 5000);
+					},
+
+					_onExit() {
+						 clearTimeout(this._fullReconnTime);
 					},
 
 					set_successor(node) {
@@ -305,7 +339,7 @@ class ConductorChord {
 						//The server can be told about its predecessor BEFORE it knows it has a successor.
 						//Check for this, and move if needed.
 
-						if(t.node.predecessor)
+						if(t.node.predecessor && t.node.predecessor !== t.node)
 							this.set_predecessor(t.node.predecessor);
 					},
 
@@ -537,6 +571,23 @@ class ConductorChord {
 					} else {
 						u.log(this, "[CHORD]: Public key still accessible.");
 					}
+				}
+			)
+	},
+
+	_finalResortReconnect () {
+		let nodeIdList = Object.getOwnPropertyNames(this.directNodes);
+
+		if(nodeIdList.length < 1)
+			return;
+
+		return this.node.stableJoin(this.directNodes[nodeIdList[0]])
+			.then(
+				() => {return this.node.stabilize();}
+			)
+			.then(
+				() => {
+					return srvNode.unlinkClient();
 				}
 			)
 	}
