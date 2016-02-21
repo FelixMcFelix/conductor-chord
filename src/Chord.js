@@ -43,7 +43,8 @@ class ConductorChord {
 			},
 
 			conductorConfig: {
-				channel: null
+				channel: null,
+				timeout: 5000
 			},
 
 			stabilizeInterval: 1000,
