@@ -330,23 +330,27 @@ class FileStore extends RemoteCallable {
 				continue;
 
 			//Apparently not - let's get to work!
-			this.call(hash, "pubReq", [])
-				.then(
-					result => {
-						let retID = result.i,
-							cryptor = pki.publicKeyFromPem(result.k),
-							internalObj = this.storage[hash],
-							securedKey;
+			(hash =>
+				{
+				this.call(hash, "pubReq", [])
+					.then(
+						result => {
+							let retID = result.i,
+								cryptor = pki.publicKeyFromPem(result.k),
+								internalObj = this.storage[hash],
+								securedKey;
 
-						if (internalObj) {
-							securedKey = cryptor.encrypt(internalObj.aesKey, "RSA-OAEP");
-							return this.call(retID, "moveKey", [internalObj.key, internalObj.data, internalObj.wasStr, internalObj.seq, internalObj.lHash, securedKey])
-								.then(
-									result => {if (result) delete this.storage[hash];}
-								);
+							if (internalObj) {
+								securedKey = cryptor.encrypt(internalObj.aesKey, "RSA-OAEP");
+								return this.call(retID, "moveKey", [internalObj.key, internalObj.data, internalObj.wasStr, internalObj.seq, internalObj.lHash, securedKey])
+									.then(
+										result => {if (result) delete this.storage[hash];}
+									);
+							}
 						}
-					}
-				);
+					);
+				}
+			)(hash)
 		}
 	}
 
