@@ -573,7 +573,7 @@ class ConductorChord {
 					}
 				}
 			)
-	},
+	}
 
 	_finalResortReconnect () {
 		let nodeIdList = Object.getOwnPropertyNames(this.directNodes);
