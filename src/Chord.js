@@ -43,8 +43,17 @@ class ConductorChord {
 			},
 
 			conductorConfig: {
-				channel: null
+				channel: null,
+				timeout: 0
 			},
+
+			stabilizeInterval: 1000,
+
+			fixFingersInterval: 666,
+
+			moveKeysInterval: 10000,
+
+			checkPubKeyInterval: 2500,
 
 			isServer: false,
 
@@ -122,8 +131,10 @@ class ConductorChord {
 		if(this.config.isServer){
 			u.log(this, "Initialising server backing channel.");
 			this.conductor.register(new BootstrapChannelServer(this));
-			setInterval(this.node.stabilize.bind(this.node), 1000);
-			setInterval(this.node.fixFingers.bind(this.node), 666);
+			setInterval(this.node.stabilize.bind(this.node), this.config.stabilizeInterval);
+			setInterval(this.node.fixFingers.bind(this.node), this.config.fixFingersInterval);
+			setInterval(this.fileStore.relocateKeys.bind(this.fileStore), this.config.moveKeysInterval);
+			setInterval(this._checkForID.bind(this), this.config.checkPubKeyInterval);
 		}
 
 		//space to store, well, external nodes - if you're a server, for instance.
@@ -173,6 +184,8 @@ class ConductorChord {
 			return this.node;
 		} else if (this.directNodes[saneID]) {
 			return this.directNodes[saneID];
+		} else if (this.knownNodes[saneID]) {
+			return this.knownNodes[saneID];
 		} else {
 			let node = new RemoteNode(this, new ID(saneID), null);
 			this.knownNodes[saneID] = node;
@@ -186,14 +199,17 @@ class ConductorChord {
 		return new Promise( (resolve, reject) => {
 			this.conductor.connectTo(saneId, "Conductor-Chord")
 				.then( conn => {
-					let node;
+					let node = this.obtainRemoteNode(conn.id);
 
-					if (optNode) {
-						node = optNode;
-					} else {
-						node = this.obtainRemoteNode(conn.id);
-					}
+					if (optNode)
+						optNode.connection = conn;
+		
 					node.connection = conn;
+
+					if (!node.isConnected()) {
+						node.connection.close();
+						reject("Connection was closed - attempt to obtain link failed.");
+					}
 
 					conn.on("message", msg => {
 						let msgObj = this.messageCore.parseMessage(msg.data);
@@ -205,6 +221,7 @@ class ConductorChord {
 						this.statemachine.disconnect(node);
 					};
 
+					this.knownNodes[conn.id] = node;
 					this.directNodes[conn.id] = node;
 
 					if(ID.compare(conn.id, node.id) !== 0){
@@ -215,8 +232,7 @@ class ConductorChord {
 					this.statemachine.node_connection(node);
 
 					resolve(node);
-				} )
-				.catch( reason => reject(reason) );
+				} );
 		} );
 	}
 
@@ -268,8 +284,42 @@ class ConductorChord {
 				external: {
 					_onEnter() {
 						//set predecessor and successor to null
+						this._lastPredec = t.node.predecessor;
+
+						if(this._lastPredec !== null && this._lastPredec !== t.node)
+							this.transition("external_known")
+
 						t.node.predecessor = t.node;
 						t.node.setFinger(0, t.node);
+						
+						if(this.priorState !== "disconnected" && !t.config.isServer)
+							t._finalResortReconnect();
+					},
+
+					set_successor(node) {
+						this.transition("partial");
+					},
+
+					// set_predecessor(node) {
+					// 	if(t.node.finger[0].node )
+					// }
+
+					disconnect_all() {
+						this.transition("disconnected");
+					}
+				},
+
+				external_known: {
+					_onEnter() {
+						//we're still known about - wait some time before trying to fully reconnect.
+						t.node.predecessor = t.node;
+						t.node.setFinger(0, t.node);
+
+						this._fullReconnTime = setTimeout(()=>t._finalResortReconnect(), 5000);
+					},
+
+					_onExit() {
+						 clearTimeout(this._fullReconnTime);
 					},
 
 					set_successor(node) {
@@ -290,7 +340,7 @@ class ConductorChord {
 						//The server can be told about its predecessor BEFORE it knows it has a successor.
 						//Check for this, and move if needed.
 
-						if(t.node.predecessor)
+						if(t.node.predecessor && t.node.predecessor !== t.node)
 							this.set_predecessor(t.node.predecessor);
 					},
 
@@ -311,6 +361,12 @@ class ConductorChord {
 					_onEnter() {
 						//Check for current status of successor list, if required.
 						//TODO
+
+						t.fileStore.relocateKeys();
+					},
+
+					set_predecessor (node) {
+						t.fileStore.relocateKeys();
 					},
 
 					disconnect_successor() {
@@ -331,6 +387,10 @@ class ConductorChord {
 					//Deal with it once 
 					disconnect_predecessor() {
 						this.transition("partial");
+					},
+
+					set_predecessor (node) {
+						t.fileStore.relocateKeys();
 					},
 
 					disconnect_all() {
@@ -443,8 +503,10 @@ class ConductorChord {
 						.then(
 							() => {
 								this.server.connect = false;
-								setInterval(this.node.stabilize.bind(this.node), 1000);
-								setInterval(this.node.fixFingers.bind(this.node), 666);
+								setInterval(this.node.stabilize.bind(this.node), this.config.stabilizeInterval);
+								setInterval(this.node.fixFingers.bind(this.node), this.config.fixFingersInterval);
+								setInterval(this.fileStore.relocateKeys.bind(this.fileStore), this.config.moveKeysInterval);
+								setInterval(this._checkForID.bind(this), this.config.checkPubKeyInterval);
 							}
 						)
 				},
@@ -493,6 +555,39 @@ class ConductorChord {
 
 		if(m)
 			this.message(m);
+	}
+
+	_checkForID () {
+		if (this.state.substr(0,5)!=="full_")
+			return;
+
+		u.log(this, "[CHORD]: Checking to see if own public key is still accessible...");
+
+		this.lookupItem(this.id.idString)
+			.then(
+				result => {
+					if (result!==this.pubKeyPem) {
+						u.log(this, "[CHORD]: Public key could not be found - readding...");
+						this.addItem(this.id.idString, this.pubKeyPem);
+					} else {
+						u.log(this, "[CHORD]: Public key still accessible.");
+					}
+				}
+			)
+	}
+
+	_finalResortReconnect () {
+		let nodeIdList = Object.getOwnPropertyNames(this.directNodes);
+
+		if(nodeIdList.length < 1)
+			return;
+
+		let chosen = this.directNodes[nodeIdList[0]]
+
+		return this.node.stableJoin(chosen)
+			.then(
+				() => {return this.node.stabilize();}
+			)
 	}
 }
 
