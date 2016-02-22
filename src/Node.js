@@ -265,7 +265,7 @@ class Node{
 
 		u.log(this.chord, `!!! STATE: ${this.chord.state} !!!`)
 
-		if(this.chord.state === "external" && ID.compare(msg.dest, this.id)!== 0) {
+		if(this.chord.state.substr(0,8) === "external" && ID.compare(msg.dest, this.id)!== 0) {
 			let nodeIdList = Object.getOwnPropertyNames(this.chord.directNodes),
 				chosen;
 
