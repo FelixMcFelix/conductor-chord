@@ -136,6 +136,18 @@ describe("Chord", () => {
 			).to.eventually.equal(null);
 		});
 
+		it("should fire the on(\"keyAdded\", ...) event when asked to store a file.", () => {
+			c = new Chord(config);
+
+			c.on("fileAdded", (k,v) => {
+				expect(k==="Testing123" && v==="MyData").to.be.true;
+			});
+
+			tim = setTimeout(()=> {
+				c.addItem("Testing123", "MyData");
+			}, 500)
+		});
+
 		afterEach(() => {
 			if(tim)
 				clearTimeout(tim);
