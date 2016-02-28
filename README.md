@@ -128,6 +128,12 @@ class EchoRPC extends RemoteCallable {
     // Call the super constructor with the module's name and a reference to the Chord object.
     super(chord, "EchoRPC");
 
+    // Use these times to configure your module's guarantees, if needed.
+    // Times are given in milliseconds.
+    this._rcTimeout = 1000;
+    this._rcRetries = 3;
+    this._rcCacheDuration = 10000;
+
     // Register as per usual.
     chord.registerModule(this);
   }
