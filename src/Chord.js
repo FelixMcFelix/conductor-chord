@@ -95,11 +95,6 @@ class ConductorChord {
 		this.fileStore = new FileStore(this);
 		this.messageCore = new MessageCore(this);
 
-		//Store the K,V pair <ID, pubKey> on the local view of the DHT.
-		//This will be relocated once an actual network is joined.
-		u.log(this, "Adding public key to local store.");
-		this.addItem(this.id.idString, this.pubKeyPem);
-
 		//Prepare the standard connection channel and an instance of Conductor:
 		//(SignalChannel registers itself to the module registry)
 		u.log(this, "Creating standard channel and conductor.");
@@ -149,6 +144,11 @@ class ConductorChord {
 
 		u.log(this, "Creating state machine.");
 		this.createStateMachine();
+
+		//Store the K,V pair <ID, pubKey> on the local view of the DHT.
+		//This will be relocated once an actual network is joined.
+		u.log(this, "Adding public key to local store.");
+		this.addItem(this.id.idString, this.pubKeyPem);
 
 		if(this.config.debug) {
 			try {
@@ -242,6 +242,12 @@ class ConductorChord {
 		return "disconnected";
 	}
 
+	get on () {
+		if(this.statemachine)
+			return this.statemachine.on.bind(this.statemachine);
+		return ()=>{};
+	}
+
 	createStateMachine () {
 		let t = this;
 
@@ -262,6 +268,9 @@ class ConductorChord {
 
 						if(t.config.isServer)
 							this.transition("full_server");
+						else
+							this.emit("disconnect")
+
 					},
 
 					node_connection(node) {
@@ -285,6 +294,9 @@ class ConductorChord {
 					_onEnter() {
 						//set predecessor and successor to null
 						this._lastPredec = t.node.predecessor;
+
+						if(this.priorState.substr(0,4)==="full")
+							this.emit("lowConnection");
 
 						if(this._lastPredec !== null && this._lastPredec !== t.node)
 							this.transition("external_known")
@@ -363,6 +375,7 @@ class ConductorChord {
 						//TODO
 
 						t.fileStore.relocateKeys();
+						this.emit("connect");
 					},
 
 					set_predecessor (node) {
@@ -526,6 +539,10 @@ class ConductorChord {
 		return this.fileStore.update(key, value);
 	}
 
+	dropItem (key) {
+		return this.fileStore.dropOwnership(key);
+	}
+
 	message(msg){
 		if(!(msg instanceof Message))
 			return;
@@ -591,4 +608,8 @@ class ConductorChord {
 	}
 }
 
-module.exports = ConductorChord;
+module.exports = {
+	Chord: ConductorChord,
+	ID,
+	RemoteCallable: require("./RemoteCallable.js")
+};
