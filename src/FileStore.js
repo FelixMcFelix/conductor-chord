@@ -140,6 +140,8 @@ class FileStore extends RemoteCallable {
 				delete this.storage[hashStr];
 			}, this.chord.config.fileStore.itemDuration);
 
+			this.chord.statemachine.emit("fileAdded", key, value);
+
 			return Promise.resolve({code: STORE_OKAY, kHash: hashStr, seq: internalObj.seq, lHash: internalObj.lHash, encKey: securedKey});
 		} else {
 			return this.call(hashStr, "store", [key, value, this.chord.pubKeyPem]);

@@ -1,7 +1,7 @@
 var chai = require("chai"),
 	chaiAsPromised = require("chai-as-promised"),
 	expect = require("chai").expect,
-	Chord = require("../src/Chord.js"),
+	Chord = require("../src/Chord.js").Chord,
 	ID = require("../src/ID.js");
 
 chai.use(chaiAsPromised);
@@ -134,6 +134,18 @@ describe("Chord", () => {
 					}, 500)
 				})
 			).to.eventually.equal(null);
+		});
+
+		it("should fire the on(\"keyAdded\", ...) event when asked to store a file.", () => {
+			c = new Chord(config);
+
+			c.on("fileAdded", (k,v) => {
+				expect(k==="Testing123" && v==="MyData").to.be.true;
+			});
+
+			tim = setTimeout(()=> {
+				c.addItem("Testing123", "MyData");
+			}, 500)
 		});
 
 		afterEach(() => {
