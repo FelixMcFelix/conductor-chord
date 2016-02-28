@@ -244,7 +244,7 @@ class ConductorChord {
 
 	get on () {
 		if(this.statemachine)
-			return this.statemachine.on;
+			return this.statemachine.on.bind(this.statemachine);
 		return ()=>{};
 	}
 
