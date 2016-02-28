@@ -19,7 +19,7 @@ window.c = new Chord({
 c.join("ws://yourserver.me:7171")
   .then(() => {
     /* Do some stuff! */
-    c.on("reconnect", () => {/* Do Something */})
+    c.on("connect", () => {/* Do Something */})
     c.on("lowConnection", () => {/* Do Something */})
     c.on("disconnect", () => {/* Do Something Else*/})
     c.on("fileAdded", (key, value) => {/* Handle the data that this node has been tasked with storing */})
