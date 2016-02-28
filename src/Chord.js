@@ -375,7 +375,7 @@ class ConductorChord {
 						//TODO
 
 						t.fileStore.relocateKeys();
-						this.emit("reconnect");
+						this.emit("connect");
 					},
 
 					set_predecessor (node) {

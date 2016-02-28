@@ -179,7 +179,7 @@ class EchoRPC extends RemoteCallable {
 ### 1.1.0
 * Now exposes RemoteCallable, ID classes to users of the module.
 * Adds .dropItem(key) onto Chord items.
-* Adds .on("evtName", fn) method to handle events. Currently, will emit "fileAdded", "reconnect", "disconnect", "lowConnection".
+* Adds .on("evtName", fn) method to handle events. Currently, will emit "fileAdded", "connect", "disconnect", "lowConnection".
 
 ### 1.0.0
 * Initial release.
