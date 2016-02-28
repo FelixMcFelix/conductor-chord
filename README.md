@@ -8,7 +8,7 @@ An ES6 Chord implementation with extensible message delivery, built with WebRTC-
 If you only need a standard chord implementation, then usage could not be simpler. The following source code will create a client (assuming execution in the browser).
 
 ```javascript
-var Chord = require("conductor-chord");
+let Chord = require("conductor-chord").Chord;
 
 window.c = new Chord({
   // The debug flag will produce additional console output.
@@ -20,13 +20,13 @@ c.join("ws://yourserver.me:7171");
 ```
 And to run your own server, assuming a suitable WebRTC implementation for Node.js.
 ```javascript
-var Chord = require("conductor-chord"),
+const Chord = require("conductor-chord").Chord,
 	wrtc = require("wrtc");
 	
 // NOTE: until wrtc accepts the Promise API, please use
 // https://github.com/FelixMcFelix/node-webrtc
 
-var c = new Chord({
+let c = new Chord({
   // This additional configuration for conductor may be used to produce client-side
   // chord based applications in Node.js, if needed.
 	conductorConfig: {
@@ -68,7 +68,7 @@ c.updateItem(key, value);
 
 // Drop an item, given a string based key.
 // Unfriendly call for now - very little feedback.
-c.fileStore.dropOwnership(k)
+c.dropItem(key);
 ```
 ### Extension
 
@@ -118,7 +118,54 @@ class GenericModule {
 }
 ```
 
+You may wish to make use of the provided RemoteCallable class, designed around providing a reliable platform for modules based on RPC. The following example should demonstrate most points concerning their usage.
+
+```javascript
+const RemoteCallable = require("conductor-chord").RemoteCallable;
+
+class EchoRPC extends RemoteCallable {
+  constructor (chord) {
+    // Call the super constructor with the module's name and a reference to the Chord object.
+    super(chord, "EchoRPC");
+
+    // Register as per usual.
+    chord.registerModule(this);
+  }
+
+  delegate (message) {
+    // Necessary to catch handlers used on the backend.
+    // Make sure that none of your handlers are called "answer"
+    // or "error".
+    if(super.delegate(message))
+      return;
+
+    switch (message.handler) {
+      //...
+      case "aThing":
+        this._thing(message.data.params)
+        break;
+      //...
+    }
+  }
+
+  doAThing (param1, param2) {
+    // To make calls, use this syntax.
+    // This should be abstracted behind named calls, like this one.
+
+    // Dest may be calculated, or input as a parameter... so long as it can be converted into an ID.
+    let dest = /*...*/;
+
+    // Params whould be wrapped as an array at all times.
+    return this.call(dest, "aThing", [param1, param2]);
+  }
+}
+```
+
 ## Changelog
+
+### 1.1.0
+* Now exposes RemoteCallable, ID classes to users of the module.
+* Adds .dropItem(key) onto Chord items.
 
 ### 1.0.0
 * Initial release.

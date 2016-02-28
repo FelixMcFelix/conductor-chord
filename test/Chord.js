@@ -1,7 +1,7 @@
 var chai = require("chai"),
 	chaiAsPromised = require("chai-as-promised"),
 	expect = require("chai").expect,
-	Chord = require("../src/Chord.js"),
+	Chord = require("../src/Chord.js").Chord,
 	ID = require("../src/ID.js");
 
 chai.use(chaiAsPromised);

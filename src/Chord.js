@@ -526,6 +526,10 @@ class ConductorChord {
 		return this.fileStore.update(key, value);
 	}
 
+	dropItem (key) {
+		return this.fileStore.dropOwnership(key);
+	}
+
 	message(msg){
 		if(!(msg instanceof Message))
 			return;
@@ -591,4 +595,8 @@ class ConductorChord {
 	}
 }
 
-module.exports = ConductorChord;
+module.exports = {
+	Chord: ConductorChord,
+	ID,
+	RemoteCallable: require("./RemoteCallable.js")
+};
