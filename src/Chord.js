@@ -295,6 +295,9 @@ class ConductorChord {
 						//set predecessor and successor to null
 						this._lastPredec = t.node.predecessor;
 
+						if(this.priorState.substr(0,4)==="full")
+							this.emit("lowConnection");
+
 						if(this._lastPredec !== null && this._lastPredec !== t.node)
 							this.transition("external_known")
 
@@ -372,7 +375,7 @@ class ConductorChord {
 						//TODO
 
 						t.fileStore.relocateKeys();
-						this.emit("connect");
+						this.emit("reconnect");
 					},
 
 					set_predecessor (node) {
