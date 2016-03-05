@@ -176,6 +176,9 @@ class EchoRPC extends RemoteCallable {
 
 ## Changelog
 
+### 1.1.1
+* Error types returned over RemoteCallable are now cast to string before JSON-stringifying.
+
 ### 1.1.0
 * Now exposes RemoteCallable, ID classes to users of the module.
 * Adds .dropItem(key) onto Chord items.

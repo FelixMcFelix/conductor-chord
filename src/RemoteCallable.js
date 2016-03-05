@@ -167,9 +167,10 @@ class RemoteCallable {
 	error (message, reason) {
 		let returnID = message.src,
 			reqID = message.data.reqID,
-			_remoteNo = message.data._remoteNo;
+			_remoteNo = message.data._remoteNo,
+			outReason = (reason instanceof Error) ? reason.toString() : reason;
 
-		message.reply(this.chord.newMessage(this.id, "error", ModuleRegistry.wrap({reqID, reason, _remoteNo, hops: 10}), returnID));
+		message.reply(this.chord.newMessage(this.id, "error", ModuleRegistry.wrap({reqID, outReason, _remoteNo, hops: 10}), returnID));
 	}
 
 	bypassAnswer (message) {
