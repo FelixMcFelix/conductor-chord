@@ -176,6 +176,9 @@ class EchoRPC extends RemoteCallable {
 
 ## Changelog
 
+### 1.1.2
+* "full_server" state removed, operation should now be more correct when the first node is joining.
+
 ### 1.1.1
 * Error types returned over RemoteCallable are now cast to string before JSON-stringifying.
 
