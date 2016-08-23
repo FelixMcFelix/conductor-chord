@@ -44,7 +44,8 @@ class ConductorChord {
 
 			conductorConfig: {
 				channel: null,
-				timeout: 0
+				timeout: 0,
+				callstats_cID: "conductor"
 			},
 
 			stabilizeInterval: 1000,
@@ -82,6 +83,7 @@ class ConductorChord {
 		this.id = new ID(idBuf);
 		u.log(this, "ID created:");
 		u.log(this, this.id.idString);
+		this.config.conductorConfig.callstats_uID = this.id.idString;
 
 		//Set up a Node object to represent the local state.
 		u.log(this, "Creating local node.");

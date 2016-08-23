@@ -244,6 +244,7 @@ class ChordSignalChannel{
 		try {
 			this.chord.conductor.renameConnection(message.data.origId, message.src);
 		} finally {
+			this._manager.confirmName(message.src);
 			this.clearActionQueue(entry);
 		}
 	}
