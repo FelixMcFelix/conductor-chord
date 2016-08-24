@@ -10,7 +10,10 @@ let utils = {
 
 		for(var propName in config2)
 			if(config2.hasOwnProperty(propName))
-				out[propName] = config2[propName];
+				if(typeof config2[propName] === "object")
+					out[propName] = mergeConfig(out[propName], config2[propName]);
+				else
+					out[propName] = config2[propName];
 
 		return out;
 	},
