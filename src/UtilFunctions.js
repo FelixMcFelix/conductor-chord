@@ -11,7 +11,9 @@ let utils = {
 		for(var propName in config2)
 			if(config2.hasOwnProperty(propName))
 				if(typeof config2[propName] === "object")
-					out[propName] = mergeConfig(out[propName], config2[propName]);
+					out[propName] = utils.mergeConfig(
+						out[propName], config2[propName]
+					);
 				else
 					out[propName] = config2[propName];
 
